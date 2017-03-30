@@ -394,6 +394,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #'   generated and the reason why.
 #' @export
 #' @importFrom dplyr select
+#' @importFrom dplyr %>%
 #' @importFrom magrittr %<>%
 #' @importFrom purrr map
 #' @importFrom purrr map_int
