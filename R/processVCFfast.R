@@ -18,6 +18,7 @@ spreadAllelesAcrossRows = function(snp){
 
 #' @importFrom Biostrings countPattern
 #' @importFrom Biostrings DNAString
+#' @importFrom Biostrings reverse
 countDigSites = function(biostring) {
   #Count the number of times KpnI, XbaI, and SfiI sites occur in a given biostring
 
@@ -83,6 +84,7 @@ generateDelConstruct = function(snpseq, refwidth, seqwidth) {
 #' @return a data_frame of labeled sequences or a data_frame listing the SNP and
 #'   why it failed
 #' @import BSgenome.Hsapiens.UCSC.hg38
+#' @importFrom Biostrings reverseComplement
 processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
