@@ -401,19 +401,19 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
 
   #skip metadata lines
-  skipNum = system(paste0('grep ^## ', inVCF$datapath, ' | wc -l'), intern = TRUE) %>% as.numeric
+  skipNum = system(paste0('grep ^## ', vcf, ' | wc -l'), intern = TRUE) %>% as.numeric
 
   #Check that the header doesn't have spaces in place of tabs. If it does (why
   #dbSNP, why?), replace the spaces with tabs and create a new col_names
   #variable
-  vcfColumns = system(paste0('head -', skipNum + 1, ' ', inVCF$datapath, ' | tail -1'),
+  vcfColumns = system(paste0('head -', skipNum + 1, ' ', vcf, ' | tail -1'),
                       intern = TRUE) %>%
     gsub('#', '', .) %>%
     gsub('[ ]+', '\t', .) %>% #replace spaces with tabs if applicable
     str_split('\t') %>%
     unlist
 
-  vcf = read_tsv(inVCF$datapath,
+  vcf = read_tsv(vcf,
                  skip = skipNum + 1,
                  col_names = vcfColumns)
 
