@@ -401,7 +401,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #' @importFrom purrr map2
 #' @importFrom purrr map2_chr
 #' @importFrom readr read_tsv
-#' @importFrom reader write_tsv
+#' @importFrom readr write_tsv
 #' @importFrom stringr str_split
 #' @importFrom purrr by_row
 #' @importFrom dplyr mutate
