@@ -372,7 +372,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 
 #' Process VCF into MPRA sequences
 #'
-#' \code{processVCF} takes a data_frame read from a VCF and returns a data_frame
+#' \code{processVCF} takes a VCF and returns a data_frame
 #' containing the labeled MPRA sequences barcoded with inert twelvemers
 #' @param vcf the path to the input VCF
 #' @param nper The number of barcoded sequences to be generated per allele per

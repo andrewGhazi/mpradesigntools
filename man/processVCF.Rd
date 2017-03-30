@@ -7,7 +7,7 @@
 processVCF(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL)
 }
 \arguments{
-\item{vcf}{A data_frame read from a VCF file}
+\item{vcf}{the path to the input VCF}
 
 \item{nper}{The number of barcoded sequences to be generated per allele per
 SNP}
@@ -28,6 +28,6 @@ A list of two data_frames. The first, named 'result', is a data_frame
   generated and the reason why.
 }
 \description{
-\code{processVCF} takes a data_frame read from a VCF and returns a data_frame
+\code{processVCF} takes a VCF and returns a data_frame
 containing the labeled MPRA sequences barcoded with inert twelvemers
 }
