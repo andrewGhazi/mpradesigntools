@@ -28,6 +28,6 @@ A list of two data_frames. The first, named 'result', is a data_frame
   generated and the reason why.
 }
 \description{
-\code{processVCF} takes a VCF and returns a data_frame
-containing the labeled MPRA sequences barcoded with inert twelvemers
+\code{processVCF} takes a VCF and returns a data_frame containing the labeled
+MPRA sequences barcoded with inert twelvemers
 }

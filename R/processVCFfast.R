@@ -15,6 +15,8 @@ spreadAllelesAcrossRows = function(snp){
   }
 }
 
+#' @importFrom Biostrings countPattern
+#' @importFrom Biostrings DNAString
 countDigSites = function(biostring) {
   #Count the number of times KpnI, XbaI, and SfiI sites occur in a given biostring
 
@@ -30,6 +32,7 @@ countDigSites = function(biostring) {
       countPattern(sfi %>% reverse, biostring, fixed = FALSE))
 }
 
+#' @importFrom Biostrings subseq
 generateInsConstruct = function(snpseq, mid, reverseGene, seqwidth){
   #This function generates a mutant construct sesquence based on
   # snpseq - the genomic context
@@ -51,6 +54,7 @@ generateInsConstruct = function(snpseq, mid, reverseGene, seqwidth){
   }
 }
 
+#' @importFrom Biostrings subseq
 generateDelConstruct = function(snpseq, refwidth, seqwidth) {
   c(subseq(snpseq,
            1,
@@ -372,8 +376,8 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 
 #' Process VCF into MPRA sequences
 #'
-#' \code{processVCF} takes a VCF and returns a data_frame
-#' containing the labeled MPRA sequences barcoded with inert twelvemers
+#' \code{processVCF} takes a VCF and returns a data_frame containing the labeled
+#' MPRA sequences barcoded with inert twelvemers
 #' @param vcf the path to the input VCF
 #' @param nper The number of barcoded sequences to be generated per allele per
 #'   SNP
@@ -386,6 +390,14 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
 #'   generated and the reason why.
+#' @export
+#' @import dplyr
+#' @importFrom magrittr %<>%
+#' @importFrom purrr map
+#' @importFrom purrr map_int
+#' @importFrom purrr map_chr
+#' @importFrom purrr map2
+#' @importFrom purrr map2_chr
 processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
 
   #skip metadata lines
