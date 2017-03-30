@@ -85,6 +85,7 @@ generateDelConstruct = function(snpseq, refwidth, seqwidth) {
 #'   why it failed
 #' @import BSgenome.Hsapiens.UCSC.hg38
 #' @importFrom Biostrings reverseComplement
+#' @importFrom Biostrings replaceLetterAt
 processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
