@@ -24,7 +24,14 @@ library(mpradesigntools)
 
 # Use
 
-Currently the main function of MPRA Design Tools is to design a set of barcoded sequences for MPRA experiments. This is done with the `processVCF` function. It takes roughly 
+This is the companion package to the MPRA Design Tools Shiny application available here: https://andrewghazi.shinyapps.io/designmpraio/
+
+The Shiny app allows users to interact with MPRA parameters (such as number of barcodes per allele) and see the effect of changing parameters on the assays power. Researchers can use this to decide what parameters best meet their experimental goals.
+
+Currently the main function of MPRA Design Tools package is to design a set of barcoded sequences for MPRA experiments (without overloading our Shiny server!). This is done with the `processVCF` function. It takes roughly 5 seconds + 10ms per barcoded sequence on a relatively modern CPU, so you can estimate the expected job time in seconds as 
+```tex
+5 + .01 * Number of barcodes per allele * Number of SNPs in VCF * 2 (for ref/alt alleles)
+```
 
 ## Example
 ```{r}
