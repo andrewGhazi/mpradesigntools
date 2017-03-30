@@ -82,6 +82,7 @@ generateDelConstruct = function(snpseq, refwidth, seqwidth) {
 #' @param revprimer a string containing the reverse PCR primer to be used
 #' @return a data_frame of labeled sequences or a data_frame listing the SNP and
 #'   why it failed
+#' @import BSgenome.Hsapiens.UCSC.hg38
 processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
