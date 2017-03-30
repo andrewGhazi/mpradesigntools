@@ -1,6 +1,7 @@
 #Function to take an input vcf and generate an output vcf with the specified context width and # of barcodes per snp
 # And now let's do it quickly using dplyr and purrr. processVCF
 
+#' @importFrom stringr str_split
 spreadAllelesAcrossRows = function(snp){
   #snp is a row from a vcf data_frame
   # if the 'ALT' column has commas in it, spread those out across otherwise identical rows
@@ -33,6 +34,7 @@ countDigSites = function(biostring) {
 }
 
 #' @importFrom Biostrings subseq
+#' @importFrom Biostrings toString
 generateInsConstruct = function(snpseq, mid, reverseGene, seqwidth){
   #This function generates a mutant construct sesquence based on
   # snpseq - the genomic context
