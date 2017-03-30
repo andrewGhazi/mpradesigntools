@@ -441,7 +441,7 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
     stop('Your design requests requires more barcodes than is possible')
   }
 
-  load('outputs/inertTwelveMersChar.RData')
+  #load('outputs/inertTwelveMersChar.RData')
   mers = twelvemers
 
   #Create a pool of barcodes for each snp
