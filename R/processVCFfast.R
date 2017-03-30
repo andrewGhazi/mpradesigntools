@@ -393,13 +393,23 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
 #'   generated and the reason why.
 #' @export
-#' @import dplyr
+#' @importFrom dplyr select
 #' @importFrom magrittr %<>%
 #' @importFrom purrr map
 #' @importFrom purrr map_int
 #' @importFrom purrr map_chr
 #' @importFrom purrr map2
 #' @importFrom purrr map2_chr
+#' @importFrom readr read_tsv
+#' @importFrom reader write_tsv
+#' @importFrom stringr str_split
+#' @importFrom purrr by_row
+#' @importFrom dplyr mutate
+#' @importFrom dplyr rowwise
+#' @importFrom dplyr do
+#' @importFrom tidyr unnest
+#' @importFrom dplyr filter
+#' @importFrom dplyr rename
 processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
 
   #skip metadata lines
@@ -419,7 +429,7 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
                  skip = skipNum + 1,
                  col_names = vcfColumns)
 
-  select = dplyr::select
+  #select = dplyr::select
 
   vcf %<>%
     by_row(spreadAllelesAcrossRows) %>%
@@ -451,7 +461,7 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
     filter(failed) %>%
     select(seqs) %>%
     unnest %>%
-    dplyr::rename(reason = result)
+    rename(reason = result)
 
   successes = processed %>%
     filter(!failed) %>%
@@ -460,7 +470,7 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
     mutate(.,
            constrseq = constrseq %>% unlist, # not sure how this got turned into a list
            totIndex = 1:nrow(.)) %>%
-    dplyr::rename(allele = mid,
+    rename(allele = mid,
            barcode = barcodes) %>%
     select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
 
