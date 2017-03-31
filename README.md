@@ -24,7 +24,7 @@ library(mpradesigntools)
 
 # Use
 
-This is the companion package to the MPRA Design Tools Shiny application available here: https://andrewghazi.shinyapps.io/designmpraio/
+This is the companion package to the MPRA Design Tools Shiny application available here: https://andrewghazi.shinyapps.io/designmpra/
 
 The Shiny app allows users to interact with MPRA parameters (such as number of barcodes per allele) and see the effect of changing parameters on the assays power. Researchers can use this to decide what parameters best meet their experimental goals.
 
