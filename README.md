@@ -3,7 +3,7 @@ A tool for generating barcoded Massively Parallel Reporter Assay sequences
 
 # Installation
 
-MPRA Design Tools depends on the Biostrings and BSgenome.Hsapiens.UCSC.hg38 packages from Bioconductor. First install these with the following commands:
+MPRA Design Tools depends on the Biostrings and BSgenome.Hsapiens.UCSC.hg38 packages from Bioconductor. First install these in R with the following commands:
 ```{r}
 source("https://bioconductor.org/biocLite.R")
 biocLite("Biostrings")
