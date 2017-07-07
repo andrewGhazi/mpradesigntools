@@ -4,8 +4,8 @@
 \alias{processVCF}
 \title{Process VCF into MPRA sequences}
 \usage{
-processVCF(vcf, nper, seqwidth, fwprimer, revprimer,
-  filterPatterns = "AATAAA", outPath = NULL)
+processVCF(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer,
+  revprimer, filterPatterns = "AATAAA", outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -13,8 +13,11 @@ processVCF(vcf, nper, seqwidth, fwprimer, revprimer,
 \item{nper}{the number of barcoded sequences to be generated per allele per
 SNP}
 
-\item{seqwidth}{the amount of sequence context flanking both sides of the SNP
-in the generated sequences}
+\item{upstreamContextRange}{the amount of sequence context to acquire
+upstream of the SNP}
+
+\item{downstreamContextRange}{the amount of sequence context to acquire
+downstream of the SNP}
 
 \item{fwprimer}{a string containing the forward PCR primer to be used}
 
@@ -36,8 +39,14 @@ A list of two data_frames. The first, named 'result', is a data_frame
 into a set of labeled MPRA sequences barcoded with inert twelvemers
 }
 \details{
-The `filterPatterns` argument is used to remove barcodes containing patterns
-  that may perform badly in a MPRA setting. For example, the default,
-  'AATAAA', corresponds to a sequence required for cleavage and
+The \code{"filterPatterns"} argument is used to remove barcodes
+  containing patterns that may perform badly in a MPRA setting. For example,
+  the default, 'AATAAA', corresponds to a sequence required for cleavage and
   polyadenylation of pre-mRNAs in eukaryotic cells.
+
+  The \code{upstreamContextRange} and \code{downstreamContextRange} arguments
+  are handled intuitively for minus strand SNPs (i.e. those that have the
+  MPRAREV tag). So for a minus strand SNP you get the complement of
+  \code{downstreamContextRange} - SNP - \code{upstreamContextRange} as the
+  genomic context.
 }

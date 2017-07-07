@@ -36,34 +36,36 @@ countDigSites = function(biostring) {
 
 #' @importFrom Biostrings subseq
 #' @importFrom Biostrings toString
-generateInsConstruct = function(snpseq, mid, reverseGene, seqwidth){
+generateInsConstruct = function(snpseq, mid, reverseGene, upstreamContextRange, downstreamContextRange){
   #This function generates a mutant construct sesquence based on
   # snpseq - the genomic context
   # mid - the insertion allele
   # reverseGene - a logical indicating whether or not the SNP is for a gene that's reversed
-  # seqwidth - the width of the context
+  # upstreamContextRange - the length of context upstream of the SNP
+  # downstreamContextRange - the length of context downstream of the SNP
+  #   this is necessary for reverse genes on the - strand to accurately specify the start point of the insertion
 
   # If the insertion is for a gene that's transcribed from the reverse strand, it needs to be the COMPLEMENT of the allele to the LEFT of the position
   # Otherwise it's the mutant allele to the right of the position
 
   if (reverseGene) {
-    toString(c(subseq(snpseq, 1, seqwidth), #The insertion goes to the right of the position given
+    toString(c(subseq(snpseq, 1, downstreamContextRange), #The insertion goes to the right of the position given
                complement(mid),
-               subseq(snpseq, seqwidth + 1, length(snpseq))))
+               subseq(snpseq, downstreamContextRange + 1, length(snpseq))))
   } else {
-    toString(c(subseq(snpseq, 1, seqwidth + 1), #The insertion goes to the right of the position given
+    toString(c(subseq(snpseq, 1, upstreamContextRange + 1), #The insertion goes to the right of the position given
                mid,
-               subseq(snpseq, seqwidth + 2, length(snpseq))))
+               subseq(snpseq, upstreamContextRange + 2, length(snpseq))))
   }
 }
 
 #' @importFrom Biostrings subseq
-generateDelConstruct = function(snpseq, refwidth, seqwidth) {
+generateDelConstruct = function(snpseq, refwidth, upstreamContextRange) {
   c(subseq(snpseq,
            1,
-           seqwidth),
+           upstreamContextRange),
     subseq(snpseq,
-           seqwidth + refwidth + 1,
+           upstreamContextRange + refwidth + 1,
            length(snpseq)))
 }
 
@@ -77,8 +79,8 @@ generateDelConstruct = function(snpseq, refwidth, seqwidth) {
 #'   a barcode pool to sample from.
 #' @param nper The number of barcoded sequences to be generated per allele per
 #'   SNP
-#' @param seqwidth The amount of sequence context flanking both sides of the SNP
-#'   in the generated sequences
+#' @param upstreamContextRange the amount of sequence context to acquire upstream of the SNP
+#' @param downstreamContextRange the amount of sequence context to acquire downstream of the SNP
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
 #' @return a data_frame of labeled sequences or a data_frame listing the SNP and
@@ -87,7 +89,7 @@ generateDelConstruct = function(snpseq, refwidth, seqwidth) {
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings replaceLetterAt
 #' @importFrom tibble data_frame
-processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
+processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
@@ -97,7 +99,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
   xba = 'TCTAGA' #XbaI
   sfi = 'GGCCNNNNNGGCC' #SfiI
 
-  isSNV = (snp$REF %in% c('A', 'C', 'G', 'T') && snp$ALT %in% c('A', 'C', 'G', 'T'))
+  isSNV = (snp$REF %in% c('A', 'C', 'G', 'T') && snp$ALT %in% c('A', 'C', 'G', 'T')) #look at me interchanging between SNV and SNP willy-nilly
   isINS = snp$REF == '-'
   isDEL = snp$ALT == '-'
 
@@ -108,8 +110,13 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 
   if (isSNV) {
 
-    rangestart = snp$POS - seqwidth
-    rangeend = snp$POS + seqwidth
+    rangestart = snp$POS - upstreamContextRange
+    rangeend = snp$POS + downstreamContextRange
+
+    if (snp$reverseGene) {
+      rangestart = snp$POS - downstreamContextRange
+      rangeend = snp$POS + upstreamContextRange
+    }
 
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
@@ -128,7 +135,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
     }
 
     refseq = toString(snpseq)
-    altseq = toString(replaceLetterAt(snpseq, seqwidth + 1, snp$ALT))
+    altseq = toString(replaceLetterAt(snpseq, upstreamContextRange + 1, snp$ALT))
 
     res = data_frame(ID = snp$ID,
                      CHROM = snp$CHROM,
@@ -156,7 +163,6 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
                     ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
-
     if (all(res$ndigSites > 3)) {
       failureRes = data_frame(ID = snp$ID,
                               CHROM = snp$CHROM,
@@ -194,8 +200,13 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
   } else if (isINS) {
 
     #If the snp is an insertion, the range of context to get is the same, but the middle allele (variable 'mid') is different
-    rangestart = snp$POS - seqwidth
-    rangeend = snp$POS + seqwidth
+    rangestart = snp$POS - upstreamContextRange
+    rangeend = snp$POS + downstreamContextRange
+
+    if (snp$reverseGene) {
+      rangestart = snp$POS - downstreamContextRange
+      rangeend = snp$POS + upstreamContextRange
+    }
 
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
@@ -217,7 +228,8 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
       return(failureRes)
     }
 
-    altseq = generateInsConstruct(snpseq, DNAString(snp$ALT), snp$reverseGene, seqwidth)
+    altseq = generateInsConstruct(snpseq, DNAString(snp$ALT), snp$reverseGene, upstreamContextRange, downstreamContextRange)
+
     res = data_frame(ID = snp$ID,
                      CHROM = snp$CHROM,
                      snpIndex = 1:(nper*2),
@@ -278,8 +290,14 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 
     genome = BSgenome.Hsapiens.UCSC.hg38
     refwidth = nchar(snp$REF)
-    rangestart = snp$POS - seqwidth
-    rangeend = snp$POS + seqwidth
+
+    rangestart = snp$POS - upstreamContextRange
+    rangeend = snp$POS + downstreamContextRange
+
+    if (snp$reverseGene) {
+      rangestart = snp$POS - downstreamContextRange
+      rangeend = snp$POS + upstreamContextRange
+    }
 
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
@@ -297,7 +315,11 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
       return(failureRes)
     }
 
-    altseq = generateDelConstruct(snpseq, refwidth, seqwidth)
+    delUpstreamRange = ifelse(snp$reverseGene,
+                              downstreamContextRange,
+                              upstreamContextRange)
+
+    altseq = generateDelConstruct(snpseq, refwidth, delUpstreamRange)
 
     res = data_frame(ID = snp$ID,
                      CHROM = snp$CHROM,
@@ -388,17 +410,25 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #' @param vcf the path to the input VCF
 #' @param nper the number of barcoded sequences to be generated per allele per
 #'   SNP
-#' @param seqwidth the amount of sequence context flanking both sides of the SNP
-#'   in the generated sequences
+#' @param upstreamContextRange the amount of sequence context to acquire
+#'   upstream of the SNP
+#' @param downstreamContextRange the amount of sequence context to acquire
+#'   downstream of the SNP
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
 #' @param filterPatterns a character vector of patterns to filter out of the
 #'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
-#' @details The filterPatterns argument is used to remove barcodes containing patterns
-#'   that may perform badly in a MPRA setting. For example, the default,
-#'   'AATAAA', corresponds to a sequence required for cleavage and
+#' @details The \code{"filterPatterns"} argument is used to remove barcodes
+#'   containing patterns that may perform badly in a MPRA setting. For example,
+#'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
 #'   polyadenylation of pre-mRNAs in eukaryotic cells.
+#'
+#'   The \code{upstreamContextRange} and \code{downstreamContextRange} arguments
+#'   are handled intuitively for minus strand SNPs (i.e. those that have the
+#'   MPRAREV tag). So for a minus strand SNP you get the complement of
+#'   \code{downstreamContextRange} - SNP - \code{upstreamContextRange} as the
+#'   genomic context.
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -429,7 +459,7 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings toString
 #'
-processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, filterPatterns = 'AATAAA', outPath = NULL){
+processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, filterPatterns = 'AATAAA', outPath = NULL){
 
   #skip metadata lines
   skipNum = system(paste0('grep ^## ', vcf, ' | wc -l'), intern = TRUE) %>% as.numeric
@@ -494,7 +524,12 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, filterPatterns =
 
   processed = vcf %>%
     rowwise %>%
-    do(seqs = processSnp(., nper = nper, seqwidth = seqwidth, fwprimer, revprimer)) %>%
+    do(seqs = processSnp(.,
+                         nper = nper,
+                         upstreamContextRange = upstreamContextRange,
+                         downstreamContextRange = downstreamContextRange,
+                         fwprimer,
+                         revprimer)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 

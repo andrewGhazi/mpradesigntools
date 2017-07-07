@@ -4,7 +4,8 @@
 \alias{processSnp}
 \title{process an individual SNP}
 \usage{
-processSnp(snp, nper, seqwidth, fwprimer, revprimer)
+processSnp(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer,
+  revprimer)
 }
 \arguments{
 \item{snp}{a data_frame containing the VCF information for one SNP as well as
@@ -13,8 +14,9 @@ a barcode pool to sample from.}
 \item{nper}{The number of barcoded sequences to be generated per allele per
 SNP}
 
-\item{seqwidth}{The amount of sequence context flanking both sides of the SNP
-in the generated sequences}
+\item{upstreamContextRange}{the amount of sequence context to acquire upstream of the SNP}
+
+\item{downstreamContextRange}{the amount of sequence context to acquire downstream of the SNP}
 
 \item{fwprimer}{a string containing the forward PCR primer to be used}
 
