@@ -4,20 +4,24 @@
 \alias{processVCF}
 \title{Process VCF into MPRA sequences}
 \usage{
-processVCF(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL)
+processVCF(vcf, nper, seqwidth, fwprimer, revprimer,
+  filterPatterns = "AATAAA", outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
 
-\item{nper}{The number of barcoded sequences to be generated per allele per
+\item{nper}{the number of barcoded sequences to be generated per allele per
 SNP}
 
-\item{seqwidth}{The amount of sequence context flanking both sides of the SNP
+\item{seqwidth}{the amount of sequence context flanking both sides of the SNP
 in the generated sequences}
 
 \item{fwprimer}{a string containing the forward PCR primer to be used}
 
 \item{revprimer}{a string containing the reverse PCR primer to be used}
+
+\item{filterPatterns}{a character vector of patterns to filter out of the
+barcode pool (along with their reverse complements)}
 
 \item{outPath}{an optional path stating where to write a .tsv of the results}
 }
@@ -28,6 +32,12 @@ A list of two data_frames. The first, named 'result', is a data_frame
   generated and the reason why.
 }
 \description{
-\code{processVCF} takes a VCF and returns a data_frame containing the labeled
-MPRA sequences barcoded with inert twelvemers
+\code{processVCF} takes a VCF of SNPs (preferably from dbSNP) and turns them
+into a set of labeled MPRA sequences barcoded with inert twelvemers
+}
+\details{
+The `filterPatterns` argument is used to remove barcodes containing patterns
+  that may perform badly in a MPRA setting. For example, the default,
+  'AATAAA', corresponds to a sequence required for cleavage and
+  polyadenylation of pre-mRNAs in eukaryotic cells.
 }

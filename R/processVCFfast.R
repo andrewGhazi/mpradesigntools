@@ -383,16 +383,22 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 
 #' Process VCF into MPRA sequences
 #'
-#' \code{processVCF} takes a VCF and returns a data_frame containing the labeled
-#' MPRA sequences barcoded with inert twelvemers
+#' \code{processVCF} takes a VCF of SNPs (preferably from dbSNP) and turns them
+#' into a set of labeled MPRA sequences barcoded with inert twelvemers
 #' @param vcf the path to the input VCF
-#' @param nper The number of barcoded sequences to be generated per allele per
+#' @param nper the number of barcoded sequences to be generated per allele per
 #'   SNP
-#' @param seqwidth The amount of sequence context flanking both sides of the SNP
+#' @param seqwidth the amount of sequence context flanking both sides of the SNP
 #'   in the generated sequences
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
+#' @param filterPatterns a character vector of patterns to filter out of the
+#'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
+#' @details The filterPatterns argument is used to remove barcodes containing patterns
+#'   that may perform badly in a MPRA setting. For example, the default,
+#'   'AATAAA', corresponds to a sequence required for cleavage and
+#'   polyadenylation of pre-mRNAs in eukaryotic cells.
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -400,30 +406,37 @@ processSnp = function(snp, nper, seqwidth, fwprimer, revprimer){
 #' @export
 #' @importFrom dplyr select
 #' @importFrom dplyr %>%
+#' @importFrom dplyr filter
+#' @importFrom dplyr rename
+#' @importFrom dplyr mutate
+#' @importFrom dplyr rowwise
+#' @importFrom dplyr do
+#' @importFrom dplyr as.tbl
 #' @importFrom magrittr %<>%
 #' @importFrom purrr map
 #' @importFrom purrr map_int
 #' @importFrom purrr map_chr
 #' @importFrom purrr map2
 #' @importFrom purrr map2_chr
+#' @importFrom purrr by_row
 #' @importFrom readr read_tsv
 #' @importFrom readr write_tsv
 #' @importFrom stringr str_split
-#' @importFrom purrr by_row
-#' @importFrom dplyr mutate
-#' @importFrom dplyr rowwise
-#' @importFrom dplyr do
+#' @importFrom stringr str_locate
 #' @importFrom tidyr unnest
-#' @importFrom dplyr filter
-#' @importFrom dplyr rename
-processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
+#' @importFrom tibble rownames_to_column
+#' @importFrom Biostrings DNAStringSet
+#' @importFrom Biostrings reverseComplement
+#' @importFrom Biostrings toString
+#'
+processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, filterPatterns = 'AATAAA', outPath = NULL){
 
   #skip metadata lines
   skipNum = system(paste0('grep ^## ', vcf, ' | wc -l'), intern = TRUE) %>% as.numeric
 
-  #Check that the header doesn't have spaces in place of tabs. If it does (why
-  #dbSNP, why?), replace the spaces with tabs and create a new col_names
-  #variable
+  # Check that the header doesn't have spaces in place of tabs. If it does (why
+  # dbSNP, why?), replace the spaces with tabs and create a new col_names
+  # variable
   vcfColumns = system(paste0('head -', skipNum + 1, ' ', vcf, ' | tail -1'),
                       intern = TRUE) %>%
     gsub('#', '', .) %>%
@@ -448,6 +461,28 @@ processVCF = function(vcf, nper, seqwidth, fwprimer, revprimer, outPath = NULL){
 
   #load('outputs/inertTwelveMersChar.RData')
   mers = twelvemers
+
+  filterRegex = paste(c(filterPatterns, # the patterns
+                        filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
+                      collapse = '|')
+
+
+  print('Filtering undesired barcode patterns...')
+  barcodeFilter = mers %>%
+    str_locate(filterRegex) %>%
+    as.data.frame() %>%
+    as.tbl() %>%
+    rownames_to_column('removeIndex') %>%
+    mutate(removeIndex = as.integer(removeIndex)) %>%
+    na.omit
+
+  mers %<>% .[-barcodeFilter$removeIndex]
+  print(paste0('Removed ',
+               nrow(barcodeFilter),
+               ' barcodes from the usable pool out of the original ',
+               length(twelvemers),
+               ' (', round(100*nrow(barcodeFilter)/length(twelvemers), digits = 3), '%)'))
+
 
   #Create a pool of barcodes for each snp
   vcf %<>% mutate(bcPools = split(mers, ceiling(1:length(mers)/(length(mers) / nrow(vcf)))),
