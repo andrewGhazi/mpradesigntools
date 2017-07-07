@@ -35,6 +35,6 @@ Currently the main function of MPRA Design Tools package is to design a set of b
 
 ## Example
 ```{r}
-processVCF(inputVCF, barcodesPerAllele, contextWidth, fwdPrimer, reversePrimer, filterPatterns = "AATAAA", outPath = <somewhere>/output.tsv)
-processVCF(<pathToVCF>, 5, 75, 'ACTGGCCAG', 'CTCGGCGGCC', filterPatterns = "AATAAA", outPath = <somewhere>/output.tsv)
+processVCF(inputVCF, barcodesPerAllele, upstreamContextRange, downstreamContextRange, fwdPrimer, reversePrimer, filterPatterns = "AATAAA", outPath = <somewhere>/output.tsv)
+processVCF(<pathToVCF>, 5, 75, 80, 'ACTGGCCAG', 'CTCGGCGGCC', filterPatterns = "AATAAA", outPath = <somewhere>/output.tsv)
 ```
