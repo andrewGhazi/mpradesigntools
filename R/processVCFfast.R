@@ -1,4 +1,4 @@
-#Function to take an input vcf and generate an output vcf with the specified context width and # of barcodes per snp
+#Function to take an input vcf and generate an output vcf with the specified up/downstream context ranges and # of barcodes per snp
 # And now let's do it quickly using dplyr and purrr. processVCF
 
 #' @importFrom stringr str_split
@@ -19,19 +19,19 @@ spreadAllelesAcrossRows = function(snp){
 #' @importFrom Biostrings countPattern
 #' @importFrom Biostrings DNAString
 #' @importFrom Biostrings reverse
-countDigSites = function(biostring) {
-  #Count the number of times KpnI, XbaI, and SfiI sites occur in a given biostring
+countDigSites = function(biostring, enzyme1, enzyme2, enzyme3) {
+  #Count the number of times enzyme1, XbaI, and SfiI sites occur in a given biostring
 
-  kpn = DNAString('GGTACC') #KpnI
-  xba = DNAString('TCTAGA') #XbaI
-  sfi = DNAString('GGCCNNNNNGGCC') #SfiI
+  # enzyme1 = DNAString('GGTACC') #KpnI
+  # xba = DNAString('TCTAGA') #XbaI
+  # sfi = DNAString('GGCCNNNNNGGCC') #SfiI
 
-  sum(countPattern(kpn, biostring),
-      countPattern(xba, biostring),
-      countPattern(sfi, biostring, fixed = FALSE),
-      countPattern(kpn %>% reverse, biostring),
-      countPattern(xba %>% reverse, biostring),
-      countPattern(sfi %>% reverse, biostring, fixed = FALSE))
+  sum(countPattern(enzyme1, biostring, fixed = FALSE),
+      countPattern(enzyme2, biostring, fixed = FALSE),
+      countPattern(enzyme3, biostring, fixed = FALSE),
+      countPattern(enzyme1 %>% reverse, biostring, fixed = FALSE),
+      countPattern(enzyme2 %>% reverse, biostring, fixed = FALSE),
+      countPattern(enzyme3 %>% reverse, biostring, fixed = FALSE))
 }
 
 #' @importFrom Biostrings subseq
@@ -89,15 +89,15 @@ generateDelConstruct = function(snpseq, refwidth, upstreamContextRange) {
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings replaceLetterAt
 #' @importFrom tibble data_frame
-processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer){
+processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, enzyme1, enzyme2, enzyme3){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
 
   genome = BSgenome.Hsapiens.UCSC.hg38
-  kpn = 'GGTACC' #KpnI
-  xba = 'TCTAGA' #XbaI
-  sfi = 'GGCCNNNNNGGCC' #SfiI
+  # kpn = 'GGTACC' #KpnI
+  # xba = 'TCTAGA' #XbaI
+  # sfi = 'GGCCNNNNNGGCC' #SfiI
 
   isSNV = (snp$REF %in% c('A', 'C', 'G', 'T') && snp$ALT %in% c('A', 'C', 'G', 'T')) #look at me interchanging between SNV and SNP willy-nilly
   isINS = snp$REF == '-'
@@ -122,7 +122,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                     start = rangestart,
                     end = rangeend)
 
-    ndigsite = countDigSites(snpseq)
+    ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
       failureRes = data_frame(ID = snp$ID,
@@ -155,12 +155,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     res %<>% mutate(sequence = paste0(fwprimer,
                                       'TG',
                                       constrseq,
-                                      kpn,
-                                      xba,
+                                      enzyme1,
+                                      enzyme2,
                                       barcodes,
                                       'GGC',
                                       revprimer),
-                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
     if (all(res$ndigSites > 3)) {
@@ -188,12 +188,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                                   sequence = paste0(fwprimer,
                                                     'TG',
                                                     constrseq,
-                                                    kpn,
-                                                    xba,
+                                                    enzyme1,
+                                                    enzyme2,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
@@ -216,7 +216,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
       snpseq %<>% reverseComplement()
     }
 
-    ndigsite = countDigSites(snpseq)
+    ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
       failureRes = data_frame(ID = snp$ID,
@@ -243,12 +243,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                      sequence = paste0(fwprimer,
                                        'TG',
                                        constrseq,
-                                       kpn,
-                                       xba,
+                                       enzyme1,
+                                       enzyme2,
                                        barcodes,
                                        'GGC',
                                        revprimer),
-                     ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                     ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
@@ -277,12 +277,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                                   sequence = paste0(fwprimer,
                                                     'TG',
                                                     constrseq,
-                                                    kpn,
-                                                    xba,
+                                                    enzyme1,
+                                                    enzyme2,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
@@ -303,7 +303,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                     start = rangestart,
                     end = rangeend)
 
-    ndigsite = countDigSites(snpseq)
+    ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
       failureRes = data_frame(ID = snp$ID,
@@ -339,12 +339,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     res %<>% mutate(sequence = paste0(fwprimer,
                                       'TG',
                                       constrseq,
-                                      kpn,
-                                      xba,
+                                      enzyme1,
+                                      enzyme2,
                                       barcodes,
                                       'GGC',
                                       revprimer),
-                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
@@ -373,12 +373,12 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                                   sequence = paste0(fwprimer,
                                                     'TG',
                                                     constrseq,
-                                                    kpn,
-                                                    xba,
+                                                    enzyme1,
+                                                    enzyme2,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x))))
+                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
@@ -416,6 +416,9 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #'   downstream of the SNP
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
+#' @param enzyme1 a string containing the pattern for the first restriction enzyme. Defaults to KpnI.
+#' @param enzyme2 a string containing the pattern for the second restriction enzyme. Defaults to XbaI.
+#' @param enzyme3 a string containing the pattern for the third restriction enzyme. Defaults to SfiI.
 #' @param filterPatterns a character vector of patterns to filter out of the
 #'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
@@ -429,6 +432,10 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #'   MPRAREV tag). So for a minus strand SNP you get the complement of
 #'   \code{downstreamContextRange} - SNP - \code{upstreamContextRange} as the
 #'   genomic context.
+#'
+#'   The three \code{enzyme} arguments may contain ambiguous nucleotides by
+#'   including an N character at the appropriate base (for example the 5 N's in
+#'   the SfiI default).
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -458,8 +465,11 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings toString
-#'
-processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, filterPatterns = 'AATAAA', outPath = NULL){
+processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, enzyme1 = 'GGTACC', enzyme2 = 'TCTAGA', enzyme3 = 'GGCCNNNNNGGCC', filterPatterns = 'AATAAA', outPath = NULL){
+
+  # kpn = 'GGTACC' #KpnI
+  # xba = 'TCTAGA' #XbaI
+  # sfi = 'GGCCNNNNNGGCC' #SfiI
 
   #skip metadata lines
   skipNum = system(paste0('grep ^## ', vcf, ' | wc -l'), intern = TRUE) %>% as.numeric
@@ -529,7 +539,10 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
                          upstreamContextRange = upstreamContextRange,
                          downstreamContextRange = downstreamContextRange,
                          fwprimer,
-                         revprimer)) %>%
+                         revprimer,
+                         enzyme1,
+                         enzyme2,
+                         enzyme3)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
