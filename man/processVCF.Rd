@@ -5,7 +5,8 @@
 \title{Process VCF into MPRA sequences}
 \usage{
 processVCF(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer,
-  revprimer, filterPatterns = "AATAAA", outPath = NULL)
+  revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
+  enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA", outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -22,6 +23,12 @@ downstream of the SNP}
 \item{fwprimer}{a string containing the forward PCR primer to be used}
 
 \item{revprimer}{a string containing the reverse PCR primer to be used}
+
+\item{enzyme1}{a string containing the pattern for the first restriction enzyme. Defaults to KpnI.}
+
+\item{enzyme2}{a string containing the pattern for the second restriction enzyme. Defaults to XbaI.}
+
+\item{enzyme3}{a string containing the pattern for the third restriction enzyme. Defaults to SfiI.}
 
 \item{filterPatterns}{a character vector of patterns to filter out of the
 barcode pool (along with their reverse complements)}
@@ -49,4 +56,8 @@ The \code{"filterPatterns"} argument is used to remove barcodes
   MPRAREV tag). So for a minus strand SNP you get the complement of
   \code{downstreamContextRange} - SNP - \code{upstreamContextRange} as the
   genomic context.
+
+  The three \code{enzyme} arguments may contain ambiguous nucleotides by
+  including an N character at the appropriate base (for example the 5 N's in
+  the SfiI default).
 }

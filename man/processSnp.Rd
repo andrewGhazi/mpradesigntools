@@ -5,7 +5,7 @@
 \title{process an individual SNP}
 \usage{
 processSnp(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer,
-  revprimer)
+  revprimer, enzyme1, enzyme2, enzyme3)
 }
 \arguments{
 \item{snp}{a data_frame containing the VCF information for one SNP as well as
