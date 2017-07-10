@@ -530,7 +530,7 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
                   snpNums = 1:nrow(vcf),
                   snpTot = nrow(vcf))
 
-  #print(sessionInfo())
+  print('Processing SNPs...')
 
   processed = vcf %>%
     rowwise %>%
