@@ -15,6 +15,7 @@ Imports:
   readr,
   tibble,
   stringr,
+  purrrlyr,
   magrittr,
   Biostrings,
   BSgenome.Hsapiens.UCSC.hg38

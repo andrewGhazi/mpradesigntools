@@ -60,4 +60,9 @@ The \code{"filterPatterns"} argument is used to remove barcodes
   The three \code{enzyme} arguments may contain ambiguous nucleotides by
   including an N character at the appropriate base (for example the 5 N's in
   the SfiI default).
+
+  The sequence for \code{enzyme3} does not show up in the output sequences,
+  however it is necessary to check for it's presence in the output sequences
+  as it is used when preparing the plasmid library. Aberrant \code{enzyme3}
+  sites could cause the library preparation to fail.
 }

@@ -436,6 +436,11 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #'   The three \code{enzyme} arguments may contain ambiguous nucleotides by
 #'   including an N character at the appropriate base (for example the 5 N's in
 #'   the SfiI default).
+#'
+#'   The sequence for \code{enzyme3} does not show up in the output sequences,
+#'   however it is necessary to check for it's presence in the output sequences
+#'   as it is used when preparing the plasmid library. Aberrant \code{enzyme3}
+#'   sites could cause the library preparation to fail.
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -455,7 +460,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #' @importFrom purrr map_chr
 #' @importFrom purrr map2
 #' @importFrom purrr map2_chr
-#' @importFrom purrr by_row
+#' @importFrom purrrlyr by_row
 #' @importFrom readr read_tsv
 #' @importFrom readr write_tsv
 #' @importFrom stringr str_split

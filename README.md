@@ -13,7 +13,7 @@ biocLite("BSgenome.Hsapiens.UCSC.hg38")
 
 The package also makes use of some tidyverse packages which can be installed with the following commands:
 ```{r}
-install.packages(c('dplyr', 'magrittr', 'purrr', 'readr', 'stringr', 'tibble', 'tidyr'))
+install.packages(c('dplyr', 'magrittr', 'purrr', 'readr', 'stringr', 'tibble', 'tidyr', 'purrrlyr'))
 ```
 
 ## Package Installation
