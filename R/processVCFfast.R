@@ -454,6 +454,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #' @importFrom dplyr rowwise
 #' @importFrom dplyr do
 #' @importFrom dplyr as.tbl
+#' @importFrom dplyr ungroup
 #' @importFrom magrittr %<>%
 #' @importFrom purrr map
 #' @importFrom purrr map_int
@@ -554,6 +555,7 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
   failures = processed %>%
     filter(failed) %>%
     select(seqs) %>%
+    ungroup %>%
     unnest %>%
     rename(reason = result)
 
