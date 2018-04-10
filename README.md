@@ -41,13 +41,14 @@ Currently the main function of MPRA Design Tools package is to design a set of b
 5 + .01 * Number of barcodes per allele * Number of SNPs in VCF * 2 (for ref/alt alleles)
 ```
 
+Currently, barcodes are constrained to being 12bp in length.
+
 # VCF Input constraints
 
 Only the CHROM, POS, REF, and ALT columns are used. The INFO column is used only for detecting reverse strand constructs.
 
 Current input constraints are:
 
-*   Barcodes are constrained to being 12bp in length
 *   Insertions and deletions must encode the reference and alternate alleles (respectively) as a dash character '-'.
 *   Multiple alternate alleles should be separated in the ALT field by a comma and no spaces
 *   By default, the program pulls the sequence context from the forward (+) strand of the reference genome. If the user wishes to generate SNPs for genes that normally are read from the reverse strand, add a string containing "MPRAREV" to the INFO field of the VCF. This will ensure that the genomic context gets inserted with the correct orientation relative to the minimal promoter and barcode in the reporter plasmid.
