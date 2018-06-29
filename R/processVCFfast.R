@@ -181,7 +181,20 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
 
+      resample_attempts = 0
       while (any(res$ndigSites > 3)) {
+        resample_attempts = resample_attempts + 1
+
+        if(resample_attempts > 40) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+          return(failureRes)
+        }
+
         #For the subset of sequences that don't work, resample the barcodes and try again.
         fixed = broken %>% mutate(barcodes = sample(brokenPool,
                                                     nrow(broken)),
@@ -270,7 +283,20 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
 
+      resample_attempts = 0
       while (any(res$ndigSites > 3)) {
+        resample_attempts = resample_attempts + 1
+
+        if (resample_attempts > 40) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+          return(failureRes)
+        }
+
         #For the subset of sequences that don't work, resample the barcodes and try again.
         fixed = broken %>% mutate(barcodes = sample(brokenPool,
                                                     nrow(broken)),
@@ -366,8 +392,19 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
 
+      resample_attempts = 0
       while (any(res$ndigSites > 3)) {
-        #For the subset of sequences that don't work, resample the barcodes and try again.
+        resample_attempts = resample_attempts + 1
+
+        if(resample_attempts > 40) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+          return(failureRes)
+        }
         fixed = broken %>% mutate(barcodes = sample(brokenPool,
                                                     nrow(broken)),
                                   sequence = paste0(fwprimer,
