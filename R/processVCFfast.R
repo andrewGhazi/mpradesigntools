@@ -531,7 +531,7 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
 
 
   #Create a pool of barcodes for each snp
-  vcf %<>% mutate(bcPools = split(mers, ceiling(1:length(mers)/(length(mers) / nrow(vcf)))),
+  vcf %<>% mutate(bcPools = split(mers, sample(1:nrow(vcf), length(mers), replace = TRUE)),
                   reverseGene = grepl('MPRAREV', INFO),
                   snpNums = 1:nrow(vcf),
                   snpTot = nrow(vcf))
