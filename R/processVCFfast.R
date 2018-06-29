@@ -9,7 +9,7 @@ spreadAllelesAcrossRows = function(snp){
   if (!grepl(',', snp$ALT)) {
     return(snp)
   } else {
-    altAlleles = snp$ALT %>% str_split(',', simplify = TRUE)
+    altAlleles = snp$ALT %>% stringr::str_split(',', simplify = TRUE)
     res = snp[rep(1, length(altAlleles)),]
     res$ALT = altAlleles %>% as.vector
     return(res)
@@ -1135,3 +1135,95 @@ processSnp_multi = function(snp, nper, upstreamContextRange, downstreamContextRa
 
   return(res)
 }
+
+fix_indels = function(REF, ALT){
+  # fixes indels to put "-" in the appropriate allele
+  #returns REF_ALT
+  # to be called like mutate(fixed_allele = map2(REF, ALT, fix_indels)) %>% separate(col = fixed_allele, into = c('REF', 'ALT'))
+  if (nchar(REF) == 1 & nchar(ALT) == 1) {
+    return(paste0(REF, '_', ALT))
+  }
+
+  if (nchar(REF) == 1 & nchar(ALT) > 1) {
+    # it's an insertion
+
+    if (REF == substr(ALT, 1,1)) {
+
+      fixed_ins = paste0('-_', substr(ALT, 2, nchar(ALT)))
+      return(fixed_ins)
+    } else {
+      stop('detected insertion but initial bases do not match')
+    }
+  }
+
+  if (nchar(REF) > 1 & nchar(ALT) == 1) {
+    # it's a deletion
+
+    if (substr(REF, 1,1) == ALT) {
+
+      fixed_del = paste0(substr(REF, 2, nchar(REF)), '_-')
+      return(fixed_del)
+    } else {
+      return('detected deletion but initial bases do not match')
+    }
+  }
+
+  else {
+    stop('cannot repair two multibase alleles')
+  }
+}
+
+#' Prepare input VCF
+#'
+#' Prepare an input VCF for sequence generation
+#'
+#' @details This function takes an input vcf, reads it in, spreads any SNPs with
+#'   alternate alleles across multiple rows, and fixes any indels that are
+#'   improperly formatted. This means if REF and ALT are listed as "A" and "ATC"
+#'   they will be replaced with "-" and "TC". If they're "A" and "T,C" this will
+#'   be spread into two entries of "A" and "T" and "A" and "C".
+#'
+#'   The output is written to the same directory as the input named
+#'   "*_fixed.vcf". This is ready to be fed into processVCF()
+#' @param vcf_path path to a vcf to be fixed
+#' @return a data_frame of the fixed VCF
+#' @export
+#' @importFrom stringr str_split
+#' @importFrom readr read_tsv
+#' @importFrom purrrlyr by_row
+#' @importFrom dplyr pull
+#' @importFrom dplyr bind_rows
+#' @importFrom tidyr separate
+#' @importFrom magrittr %>%
+#' @importFrom magrittr %<>%
+spread_and_fix_indels = function(vcf_path){
+
+  skipNum = system(paste0('grep ^## ', vcf_path, ' | wc -l'), intern = TRUE) %>%
+    as.numeric
+
+  # Check that the header doesn't have spaces in place of tabs. If it does (why
+  # dbSNP, why?), replace the spaces with tabs and create a new col_names
+  # variable
+  vcfColumns = system(paste0('head -', skipNum + 1, ' ', vcf_path, ' | tail -1'),
+                      intern = TRUE) %>%
+    gsub('#', '', .) %>%
+    gsub('[ ]+', '\t', .) %>% #replace spaces with tabs if applicable
+    stringr::str_split('\t') %>%
+    unlist
+
+  vcf = readr::read_tsv(vcf_path,
+                 skip = skipNum + 1,
+                 col_names = vcfColumns)
+
+  vcf %<>%
+    purrrlyr::by_row(spreadAllelesAcrossRows) %>%
+    dplyr::pull(.out) %>%
+    dplyr::bind_rows() %>%
+    dplyr::mutate(fixed_allele = map2_chr(REF, ALT, fix_indels)) %>%
+    tidyr::separate(col = fixed_allele, into = c('REF', 'ALT'), sep = '_')
+
+  vcf %>%
+    write_tsv(gsub('.vcf', '_fixed.vcf', vcf_path))
+  vcf
+}
+
