@@ -589,30 +589,66 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
-  failures = processed %>%
-    filter(failed) %>%
-    select(seqs) %>%
-    ungroup %>%
-    unnest %>%
-    rename(reason = result)
+  if (!all(processed$failed)) { # if none failed
 
-  successes = processed %>%
-    filter(!failed) %>%
-    .$seqs %>%
-    Reduce('rbind', .) %>%
-    mutate(.,
-           constrseq = constrseq %>% unlist, # not sure how this got turned into a list
-           totIndex = 1:nrow(.)) %>%
-    rename(allele = mid,
-           barcode = barcodes) %>%
-    select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
+    successes = processed %>%
+      filter(!failed) %>%
+      .$seqs %>%
+      Reduce('rbind', .) %>%
+      mutate(.,
+             constrseq = constrseq %>% unlist, # not sure how this got turned into a list
+             totIndex = 1:nrow(.)) %>%
+      rename(allele = mid,
+             barcode = barcodes) %>%
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
 
-  if (!is.null(outPath)) {
-    outPath %<>% gsub('.tsv', '', .) %>% paste0(., '.tsv')
-    write_tsv(successes, path = outPath)
+    res = list(result = successes, failed = NA)
+
+    if (!is.null(outPath)) {
+      outPath %<>% gsub('.tsv', '', .) %>% paste0(., '.tsv')
+      write_tsv(successes, path = outPath)
+    }
+
+  } else if (all(processed$failed)) { # if they ALL failed :(
+
+    failures = processed %>%
+      filter(failed) %>%
+      select(seqs) %>%
+      ungroup %>%
+      unnest %>%
+      dplyr::rename(reason = result)
+
+    res = list(result = NA, failed = failures)
+
+  } else {
+
+    failures = processed %>%
+      filter(failed) %>%
+      select(seqs) %>%
+      ungroup %>%
+      unnest %>%
+      dplyr::rename(reason = result)
+
+    successes = processed %>%
+      filter(!failed) %>%
+      .$seqs %>%
+      Reduce('rbind', .) %>%
+      mutate(.,
+             constrseq = constrseq %>% unlist, # not sure how this got turned into a list
+             totIndex = 1:nrow(.)) %>%
+      rename(allele = mid,
+             barcode = barcodes) %>%
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
+
+    res = list(result = successes, failed = failures)
+
+    if (!is.null(outPath)) {
+      outPath %<>% gsub('.tsv', '', .) %>% paste0(., '.tsv')
+      write_tsv(successes, path = outPath)
+    }
+
   }
 
-  res = list(result = successes, failed = failures)
   return(res)
 }
 
