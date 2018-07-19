@@ -589,7 +589,7 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
-  if (!all(processed$failed)) { # if none failed
+  if (!any(processed$failed)) { # if none failed
 
     successes = processed %>%
       filter(!failed) %>%
