@@ -636,7 +636,7 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
       mutate(.,
              constrseq = constrseq %>% unlist, # not sure how this got turned into a list
              totIndex = 1:nrow(.)) %>%
-      rename(allele = mid,
+      dplyr::rename(allele = mid,
              barcode = barcodes) %>%
       select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
 
