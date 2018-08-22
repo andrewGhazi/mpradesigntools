@@ -69,6 +69,76 @@ generateDelConstruct = function(snpseq, refwidth, upstreamContextRange) {
            length(snpseq)))
 }
 
+randomly_change_pattern = function(dig_pattern){
+  site_to_change = sample(1:nchar(dig_pattern), size = 1)
+  old_allele = str_sub(dig_pattern, site_to_change, site_to_change)
+  allele_options = c('A', 'T', 'C', 'G')[!(c('A', 'T', 'C', 'G') %in% old_allele)]
+
+  new_allele = sample(allele_options, size = 1)
+
+  str_sub(dig_pattern, start = site_to_change, end = site_to_change) = new_allele
+  return(dig_pattern)
+}
+
+reassign_pattern = function(construct_seq, aberrant_site_loc, replacement) {
+  str_sub(construct_seq,
+          start = BiocGenerics::start(aberrant_site_loc),
+          end = BiocGenerics::end(aberrant_site_loc)) = replacement
+  return(construct_seq)
+}
+
+#' Randomly correct aberrant digestion sites
+#'
+#' For a SNP with aberrant digestion sites in the context, randomly change bases
+#' in the site across barcodes
+#'
+#' @param snp a data_frame of one SNP
+#' #' @param nper The number of barcoded sequences to be generated per allele per
+#'   SNP
+#' @param upstreamContextRange the amount of sequence context to acquire upstream of the SNP
+#' @param downstreamContextRange the amount of sequence context to acquire downstream of the SNP
+#' @param fwprimer a string containing the forward PCR primer to be used
+#' @param revprimer a string containing the reverse PCR primer to be used
+randomly_fix = function(snp,
+                        res_df,
+                        dig_patterns,
+                        dig_site_locations){
+
+  dig_sites_present = map_lgl(dig_site_locations, ~length(width(.x)) != 0)
+
+  if (sum(dig_sites_present) > 1) {
+    res_df = data_frame(ID = snp$ID,
+                            CHROM = snp$CHROM,
+                            POS = snp$POS,
+                            REF = snp$REF,
+                            ALT = snp$ALT,
+                            result = 'Failed - More than one aberrant digestion site in context')
+    return(res_df)
+  }
+
+  aberrant_in_context = any(dig_sites_present)
+
+  aberrant_site = dig_site_locations[which(dig_sites_present)]  %>% .[[1]]
+
+  if (aberrant_in_context) {
+    res_df %<>%
+      mutate(aberrant_pattern = dig_patterns[which(dig_sites_present)],
+             fixed_pattern = aberrant_pattern %>% map_chr(randomly_change_pattern),
+             constrseq_fixed = map2_chr(constrseq, fixed_pattern, reassign_pattern, aberrant_site_loc = aberrant_site))
+  } else {
+    res_df = data_frame(ID = snp$ID,
+                            CHROM = snp$CHROM,
+                            POS = snp$POS,
+                            REF = snp$REF,
+                            ALT = snp$ALT,
+                            result = 'Failed - aberrant site generated at interface between sequence elements')
+    return(res_df)
+  }
+
+  return(res_df)
+
+}
+
 #' process an individual SNP
 #'
 #' Take one SNP, get its genomic context, concatenate the parts, and check it
@@ -83,13 +153,24 @@ generateDelConstruct = function(snpseq, refwidth, upstreamContextRange) {
 #' @param downstreamContextRange the amount of sequence context to acquire downstream of the SNP
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
-#' @return a data_frame of labeled sequences or a data_frame listing the SNP and
-#'   why it failed
+#' @param enzyme1 the first restriction enzyme's recognition pattern
+#' @param enzyme2 the first restriction enzyme's recognition pattern
+#' @param enzyme3 the first restriction enzyme's recognition pattern
+#' @return a data_frame of labeled sequences with appropriate information on the changes made
 #' @import BSgenome.Hsapiens.UCSC.hg38
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings replaceLetterAt
 #' @importFrom tibble data_frame
-processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, enzyme1, enzyme2, enzyme3){
+processSnp = function(snp,
+                      nper,
+                      upstreamContextRange,
+                      downstreamContextRange,
+                      fwprimer,
+                      revprimer,
+                      enzyme1,
+                      enzyme2,
+                      enzyme3,
+                      alter_aberrant = FALSE){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
@@ -108,6 +189,14 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
   # adapts to the type of SNP when generating the sequences, but that might be
   # hard. There are subtle differences in each of the types of variants.
 
+  # these get passed later to randomly_fix
+  dig_patterns = c(enzyme1 = enzyme1,
+                   enzyme2 = enzyme2,
+                   enzyme3 = enzyme3,
+                   enzyme1_rev = enzyme1 %>% reverse,
+                   enzyme2_rev = enzyme2 %>% reverse,
+                   enzyme3_rev = enzyme3 %>% reverse)
+
   if (isSNV) {
 
     rangestart = snp$POS - upstreamContextRange
@@ -125,13 +214,20 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - Context contained a digestion site')
-      return(failureRes)
+      if (alter_aberrant) {
+
+        # the digestion sites get randomly fixed later, so this is all that's done here
+        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - Context contained a digestion site')
+        return(failureRes)
+      }
+
     }
 
     refseq = toString(snpseq)
@@ -149,7 +245,7 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
                                                           altseq)))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(.x))))
+      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
     }
 
     res %<>% mutate(sequence = paste0(fwprimer,
@@ -164,13 +260,53 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
     if (all(res$ndigSites > 3)) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
-      return(failureRes)
+
+      if (alter_aberrant) {
+
+        if (!exists('dig_site_locations')) {
+
+          dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$sequence) %>%
+            mutate(pattern_loc = map2(dig_pattern, constr_seq,
+                                      ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+            pull(pattern_loc) %>%
+            unique
+        }
+
+        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+                                                  ~length(width(.x)) != 0)) > 0
+
+        if (multiple_aberrant_dig_sites) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without multiple aberrant digestion sites')
+          return(failureRes)
+        }
+
+        res = randomly_fix(snp,
+                           res,
+                           dig_patterns,
+                           dig_site_locations) %>%
+          mutate(sequence = paste0(fwprimer,
+                                   'TG',
+                                   constrseq_fixed,
+                                   enzyme1,
+                                   enzyme2,
+                                   barcodes,
+                                   'GGC',
+                                   revprimer),
+                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site in all constructs')
+        return(failureRes)
+      }
     }
 
     if (any(res$ndigSites > 3)) {
@@ -185,13 +321,14 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
       while (any(res$ndigSites > 3)) {
         resample_attempts = resample_attempts + 1
 
-        if(resample_attempts > 40) {
+        if (resample_attempts > 40) {
+
           failureRes = data_frame(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
                                   ALT = snp$ALT,
-                                  result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+                                  result = 'Failed - SNP sequence could not be generated without an aberrant digestion site even after barcode resampling')
           return(failureRes)
         }
 
@@ -232,13 +369,24 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - Context contained a digestion site')
-      return(failureRes)
+      if (alter_aberrant) {
+        dig_patterns = c(enzyme1,
+                         enzyme2,
+                         enzyme3,
+                         enzyme1 %>% reverse,
+                         enzyme2 %>% reverse,
+                         enzyme3 %>% reverse)
+
+        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - Context contained a digestion site')
+        return(failureRes)
+      }
     }
 
     altseq = generateInsConstruct(snpseq, DNAString(snp$ALT), snp$reverseGene, upstreamContextRange, downstreamContextRange)
@@ -266,13 +414,17 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
     if (all(res$ndigSites > 3)) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
-      return(failureRes)
+      if (alter_aberrant) {
+
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+        return(failureRes)
+      }
     }
 
     if (any(res$ndigSites > 3)) {
@@ -332,13 +484,24 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
 
     if (ndigsite > 0) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - Context contained a digestion site')
-      return(failureRes)
+      if (alter_aberrant) {
+        dig_patterns = c(enzyme1,
+                         enzyme2,
+                         enzyme3,
+                         enzyme1 %>% reverse,
+                         enzyme2 %>% reverse,
+                         enzyme3 %>% reverse)
+
+        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - Context contained a digestion site')
+        return(failureRes)
+      }
     }
 
     delUpstreamRange = ifelse(snp$reverseGene,
@@ -375,13 +538,17 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
     if (all(res$ndigSites > 3)) {
-      failureRes = data_frame(ID = snp$ID,
-                              CHROM = snp$CHROM,
-                              POS = snp$POS,
-                              REF = snp$REF,
-                              ALT = snp$ALT,
-                              result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
-      return(failureRes)
+      if (alter_aberrant) {
+
+      } else {
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+        return(failureRes)
+      }
     }
 
     if (any(res$ndigSites > 3)) {
@@ -508,7 +675,18 @@ processSnp = function(snp, nper, upstreamContextRange, downstreamContextRange, f
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings toString
-processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, enzyme1 = 'GGTACC', enzyme2 = 'TCTAGA', enzyme3 = 'GGCCNNNNNGGCC', filterPatterns = 'AATAAA', outPath = NULL){
+processVCF = function(vcf,
+                      nper,
+                      upstreamContextRange,
+                      downstreamContextRange,
+                      fwprimer,
+                      revprimer,
+                      enzyme1 = 'GGTACC',
+                      enzyme2 = 'TCTAGA',
+                      enzyme3 = 'GGCCNNNNNGGCC',
+                      filterPatterns = 'AATAAA',
+                      alter_aberrant = FALSE,
+                      outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
   # xba = 'TCTAGA' #XbaI
@@ -585,7 +763,8 @@ processVCF = function(vcf, nper, upstreamContextRange, downstreamContextRange, f
                          revprimer,
                          enzyme1,
                          enzyme2,
-                         enzyme3)) %>%
+                         enzyme3,
+                         alter_aberrant = alter_aberrant)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
@@ -906,7 +1085,7 @@ processSnp_multi = function(snp, nper, upstreamContextRange, downstreamContextRa
                                                           altseq)))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(.x))))
+      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
     }
 
     res %<>% mutate(sequence = paste0(fwprimer,
@@ -1096,7 +1275,7 @@ processSnp_multi = function(snp, nper, upstreamContextRange, downstreamContextRa
                      constrseq = map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(.x))))
+      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
     } else {
       res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(.x)))
     }
