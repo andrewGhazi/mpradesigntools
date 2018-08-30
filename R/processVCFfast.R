@@ -520,7 +520,7 @@ processSnp = function(snp,
                      constrseq = map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(.x))))
+      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
     } else {
       res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(.x)))
     }
@@ -626,6 +626,7 @@ processSnp = function(snp,
 #' @param filterPatterns a character vector of patterns to filter out of the
 #'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
+#' @param alter_aberrant under development - logical indicating whether to randomly alter aberrant digestion sites across barcodes
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
 #'   containing patterns that may perform badly in a MPRA setting. For example,
 #'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
