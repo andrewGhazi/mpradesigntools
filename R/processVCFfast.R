@@ -87,6 +87,16 @@ reassign_pattern = function(construct_seq, aberrant_site_loc, replacement) {
   return(construct_seq)
 }
 
+change_pattern = function(ab_pattern,
+                          pos_to_change,
+                          allele_to_use){
+  substr(ab_pattern,
+         pos_to_change,
+         pos_to_change) = allele_to_use
+
+  return(ab_pattern)
+}
+
 #' Randomly correct aberrant digestion sites
 #'
 #' For a SNP with aberrant digestion sites in the context, randomly change bases
@@ -121,10 +131,29 @@ randomly_fix = function(snp,
   aberrant_site = dig_site_locations[which(dig_sites_present)]  %>% .[[1]]
 
   if (aberrant_in_context) {
+
+    aberrant_pattern = dig_patterns[which(dig_sites_present)]
+
+    # This assures that the changes are unique, if possible
+    altered_patterns = data_frame(pos_to_change = 1:nchar(aberrant_pattern),
+                                  possible_alleles = map(pos_to_change, ~dplyr::setdiff(c('A', 'C', 'G', 'T'),
+                                                                                        substr(aberrant_pattern,
+                                                                                               .x, .x)))) %>%
+      unnest %>%
+      {sample_n(.,
+                nrow(res_df) / 2,
+                replace = (nrow(res_df) / 2 > nrow(.)))} %>%
+      mutate(altered_pattern = map2_chr(pos_to_change, possible_alleles,
+                                        change_pattern,
+                                        ab_pattern = aberrant_pattern))
+
     res_df %<>%
-      mutate(aberrant_pattern = dig_patterns[which(dig_sites_present)],
-             fixed_pattern = aberrant_pattern %>% map_chr(randomly_change_pattern),
-             constrseq_fixed = map2_chr(constrseq, fixed_pattern, reassign_pattern, aberrant_site_loc = aberrant_site))
+      mutate(aberrant_pattern = aberrant_pattern,
+             fixed_pattern = rep(altered_patterns$altered_pattern, times = 2), # give the same altered patterns to both alleles
+             fixed_pattern_index = rep(1:length(altered_patterns), times = 2),
+             constrseq_fixed = map2_chr(constrseq, fixed_pattern,
+                                        reassign_pattern,
+                                        aberrant_site_loc = aberrant_site))
   } else {
     res_df = data_frame(ID = snp$ID,
                             CHROM = snp$CHROM,
@@ -265,15 +294,17 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$sequence) %>%
-            mutate(pattern_loc = map2(dig_pattern, constr_seq,
-                                      ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
-            pull(pattern_loc) %>%
-            unique
+          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+
+          # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
+          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #   pull(pattern_loc) %>%
+          #   unique
         }
 
         multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
-                                                  ~length(width(.x)) != 0)) > 0
+                                                  ~length(width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
           failureRes = data_frame(ID = snp$ID,
@@ -297,7 +328,9 @@ processSnp = function(snp,
                                    barcodes,
                                    'GGC',
                                    revprimer),
-                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+          tidyr::nest(aberrant_pattern:constrseq_fixed,
+                      .key = 'site_fix_info')
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -416,13 +449,52 @@ processSnp = function(snp,
     if (all(res$ndigSites > 3)) {
       if (alter_aberrant) {
 
+        if (!exists('dig_site_locations')) {
+
+          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+
+          # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
+          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #   pull(pattern_loc) %>%
+          #   unique
+        }
+
+        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+                                                  ~length(width(.x)) != 0)) > 1
+
+        if (multiple_aberrant_dig_sites) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without multiple aberrant digestion sites')
+          return(failureRes)
+        }
+
+        res = randomly_fix(snp,
+                           res,
+                           dig_patterns,
+                           dig_site_locations) %>%
+          mutate(sequence = paste0(fwprimer,
+                                   'TG',
+                                   constrseq_fixed,
+                                   enzyme1,
+                                   enzyme2,
+                                   barcodes,
+                                   'GGC',
+                                   revprimer),
+                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+          tidyr::nest(aberrant_pattern:constrseq_fixed,
+                      .key = 'site_fix_info')
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
                                 ALT = snp$ALT,
-                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site in all constructs')
         return(failureRes)
       }
     }
@@ -540,13 +612,52 @@ processSnp = function(snp,
     if (all(res$ndigSites > 3)) {
       if (alter_aberrant) {
 
+        if (!exists('dig_site_locations')) {
+
+          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+
+          # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
+          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #   pull(pattern_loc) %>%
+          #   unique
+        }
+
+        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+                                                  ~length(width(.x)) != 0)) > 1
+
+        if (multiple_aberrant_dig_sites) {
+          failureRes = data_frame(ID = snp$ID,
+                                  CHROM = snp$CHROM,
+                                  POS = snp$POS,
+                                  REF = snp$REF,
+                                  ALT = snp$ALT,
+                                  result = 'Failed - SNP sequence could not be generated without multiple aberrant digestion sites')
+          return(failureRes)
+        }
+
+        res = randomly_fix(snp,
+                           res,
+                           dig_patterns,
+                           dig_site_locations) %>%
+          mutate(sequence = paste0(fwprimer,
+                                   'TG',
+                                   constrseq_fixed,
+                                   enzyme1,
+                                   enzyme2,
+                                   barcodes,
+                                   'GGC',
+                                   revprimer),
+                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+          tidyr::nest(aberrant_pattern:constrseq_fixed,
+                      .key = 'site_fix_info')
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
                                 ALT = snp$ALT,
-                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site')
+                                result = 'Failed - SNP sequence could not be generated without an aberrant digestion site in all constructs')
         return(failureRes)
       }
     }
@@ -600,6 +711,10 @@ processSnp = function(snp,
   # Do some checks that all the barcodes are unique and otherwise return the result.
   if (length(unique(res$barcodes)) != nrow(res)) { # This should never happen.
     stop('Sequence generation finished but barcodes are nonunique')
+  }
+
+  if (!('site_fix_info' %in% names(res))) {
+    res$site_fix_info = NA
   }
 
   return(res)
@@ -780,7 +895,7 @@ processVCF = function(vcf,
              totIndex = 1:nrow(.)) %>%
       rename(allele = mid,
              barcode = barcodes) %>%
-      select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info)
 
     res = list(result = successes, failed = NA)
 
@@ -818,12 +933,14 @@ processVCF = function(vcf,
              totIndex = 1:nrow(.)) %>%
       dplyr::rename(allele = mid,
              barcode = barcodes) %>%
-      select(ID, type, allele, snpIndex, totIndex, barcode, sequence)
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info)
 
     res = list(result = successes, failed = failures)
 
     if (!is.null(outPath)) {
-      outPath %<>% gsub('.tsv', '', .) %>% paste0(., '.tsv')
+      outPath %<>% gsub('\\.tsv', '', .) %>% paste0(., '.tsv')
+      save(res,
+           file = outPath %>% gsub('\\.tsv', '\\.RData', .))
       write_tsv(successes, path = outPath)
     }
 
