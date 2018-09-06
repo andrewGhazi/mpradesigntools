@@ -246,7 +246,7 @@ processSnp = function(snp,
       if (alter_aberrant) {
 
         # the digestion sites get randomly fixed later, so this is all that's done here
-        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -294,11 +294,11 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
           #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
-          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
         }
@@ -410,7 +410,7 @@ processSnp = function(snp,
                          enzyme2 %>% reverse,
                          enzyme3 %>% reverse)
 
-        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -451,11 +451,11 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
           #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
-          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
         }
@@ -564,7 +564,7 @@ processSnp = function(snp,
                          enzyme2 %>% reverse,
                          enzyme3 %>% reverse)
 
-        dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -614,11 +614,11 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
           #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
-          #                             ~matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
+          #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
         }
