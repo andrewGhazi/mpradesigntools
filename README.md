@@ -1,6 +1,12 @@
 # mpradesigntools
 An R package for generating barcoded Massively Parallel Reporter Assay sequences
 
+## Publication  
+
+If you make use of this software, please cite the following publication:
+
+> Andrew R Ghazi, Edward S Chen, David M Henke, Namrata Madan, Leonard C Edelstein, Chad A Shaw; Design tools for MPRA experiments, Bioinformatics, Volume 34, Issue 15, 1 August 2018, Pages 2682–2683, https://doi.org/10.1093/bioinformatics/bty150
+
 # Installation
 
 ## Dependencies
@@ -69,3 +75,12 @@ processVCF(vcf = '/path/to/the.vcf',
            enzyme3 = 'GGCCNNNNNGGCC',
            alter_aberrant = FALSE)
 ```
+
+# Planned Features  
+
+*    mm10 genomic context  
+*    parallelization  
+*    randomized alterations to aberrant digestion sites  
+*    bed file to Sharpr-MPRA library oligo design
+
+If you are interested in a subset of these features or have other feature requests, please let us know to inform our implementation prioritization. You can do so by opening an issue on this repository or contacting the first and corresponding authors of the publication, listed above.
