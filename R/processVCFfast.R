@@ -824,7 +824,8 @@ processVCF = function(vcf,
   vcf = read_tsv(vcf,
                  skip = skipNum + 1,
                  col_names = vcfColumns,
-                 col_types = readr::cols(.default = readr::col_character()))
+                 col_types = readr::cols(.default = readr::col_character(),
+                                         POS = readr::col_integer()))
 
   #select = dplyr::select
 
@@ -1052,7 +1053,8 @@ processVCF_multi = function(vcf,
   vcf = read_tsv(vcf,
                  skip = skipNum + 1,
                  col_names = vcfColumns,
-                 col_types = readr::cols(.default = readr::col_character()))
+                 col_types = readr::cols(.default = readr::col_character(),
+                                         POS = readr::col_integer()))
 
   #select = dplyr::select
 
@@ -1549,7 +1551,8 @@ spread_and_fix_indels = function(vcf_path){
   vcf = readr::read_tsv(vcf_path,
                  skip = skipNum + 1,
                  col_names = vcfColumns,
-                 col_types = readr::cols(.default = readr::col_character()))
+                 col_types = readr::cols(.default = readr::col_character(),
+                                         POS = readr::col_integer()))
 
   vcf %<>%
     purrrlyr::by_row(spreadAllelesAcrossRows) %>%
