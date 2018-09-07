@@ -50,7 +50,7 @@ generateInsConstruct = function(snpseq, mid, reverseGene, upstreamContextRange, 
 
   if (reverseGene) {
     toString(c(subseq(snpseq, 1, downstreamContextRange), #The insertion goes to the right of the position given
-               complement(mid),
+               Biostrings::complement(mid),
                subseq(snpseq, downstreamContextRange + 1, length(snpseq))))
   } else {
     toString(c(subseq(snpseq, 1, upstreamContextRange + 1), #The insertion goes to the right of the position given
