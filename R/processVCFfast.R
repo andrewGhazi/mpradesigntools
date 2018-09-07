@@ -241,6 +241,7 @@ processSnp = function(snp,
                     end = rangeend)
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
+    ndigsite_in_context = ndigsite
 
     if (ndigsite > 0) {
       if (alter_aberrant) {
@@ -290,7 +291,7 @@ processSnp = function(snp,
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
     if (all(res$ndigSites > 3)) {
 
-      if (alter_aberrant) {
+      if (alter_aberrant & ndigsite_in_context > 0) {
 
         if (!exists('dig_site_locations')) {
 
@@ -400,6 +401,7 @@ processSnp = function(snp,
     }
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
+    ndigsite_in_context = ndigsite
 
     if (ndigsite > 0) {
       if (alter_aberrant) {
@@ -447,7 +449,7 @@ processSnp = function(snp,
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
     if (all(res$ndigSites > 3)) {
-      if (alter_aberrant) {
+      if (alter_aberrant & ndigsite_in_context > 0) {
 
         if (!exists('dig_site_locations')) {
 
@@ -554,6 +556,7 @@ processSnp = function(snp,
                     end = rangeend)
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
+    ndigsite_in_context = ndigsite
 
     if (ndigsite > 0) {
       if (alter_aberrant) {
@@ -610,7 +613,7 @@ processSnp = function(snp,
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
     if (all(res$ndigSites > 3)) {
-      if (alter_aberrant) {
+      if (alter_aberrant & ndigsite_in_context > 0) {
 
         if (!exists('dig_site_locations')) {
 
@@ -821,7 +824,7 @@ processVCF = function(vcf,
     str_split('\t') %>%
     unlist
 
-  vcf = read_tsv(vcf,
+  vcf = readr::read_tsv(vcf,
                  skip = skipNum + 1,
                  col_names = vcfColumns,
                  col_types = readr::cols(.default = readr::col_character(),
@@ -830,7 +833,7 @@ processVCF = function(vcf,
   #select = dplyr::select
 
   vcf %<>%
-    by_row(spreadAllelesAcrossRows) %>%
+    purrrlyr::by_row(spreadAllelesAcrossRows) %>%
     .$.out %>%
     Reduce('rbind', .)
 
@@ -838,7 +841,6 @@ processVCF = function(vcf,
     stop('Your design requests requires more barcodes than is possible')
   }
 
-  #load('outputs/inertTwelveMersChar.RData')
   mers = twelvemers
 
   filterRegex = paste(c(filterPatterns, # the patterns
@@ -1370,6 +1372,7 @@ processSnp_multi = function(snp, nper, upstreamContextRange, downstreamContextRa
                     end = rangeend)
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
+    ndigsite_in_context = ndigsite
 
     if (ndigsite > 0) {
       failureRes = data_frame(ID = snp$ID,
