@@ -114,7 +114,7 @@ randomly_fix = function(snp,
                         dig_patterns,
                         dig_site_locations){
 
-  dig_sites_present = purrr::map_lgl(dig_site_locations, ~length(BiocGenerics::width.x)) != 0)
+  dig_sites_present = purrr::map_lgl(dig_site_locations, ~length(BiocGenerics::width(.x)) != 0)
 
   if (sum(dig_sites_present) > 1) {
     res_df = data_frame(ID = snp$ID,
@@ -304,7 +304,7 @@ processSnp = function(snp,
         }
 
         multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
-                                                  ~length(BiocGenerics::width.x)) != 0)) > 1
+                                                  ~length(BiocGenerics::width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
           failureRes = data_frame(ID = snp$ID,
@@ -461,7 +461,7 @@ processSnp = function(snp,
         }
 
         multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
-                                                  ~length(BiocGenerics::width.x)) != 0)) > 1
+                                                  ~length(BiocGenerics::width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
           failureRes = data_frame(ID = snp$ID,
@@ -624,7 +624,7 @@ processSnp = function(snp,
         }
 
         multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
-                                                  ~length(BiocGenerics::width.x)) != 0)) > 1
+                                                  ~length(BiocGenerics::width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
           failureRes = data_frame(ID = snp$ID,
