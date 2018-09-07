@@ -114,7 +114,7 @@ randomly_fix = function(snp,
                         dig_patterns,
                         dig_site_locations){
 
-  dig_sites_present = map_lgl(dig_site_locations, ~length(width(.x)) != 0)
+  dig_sites_present = purrr::map_lgl(dig_site_locations, ~length(width(.x)) != 0)
 
   if (sum(dig_sites_present) > 1) {
     res_df = data_frame(ID = snp$ID,
@@ -303,7 +303,7 @@ processSnp = function(snp,
           #   unique
         }
 
-        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+        multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
                                                   ~length(width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
@@ -460,7 +460,7 @@ processSnp = function(snp,
           #   unique
         }
 
-        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+        multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
                                                   ~length(width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
@@ -623,7 +623,7 @@ processSnp = function(snp,
           #   unique
         }
 
-        multiple_aberrant_dig_sites = sum(map_lgl(dig_site_locations,
+        multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
                                                   ~length(width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
@@ -1118,7 +1118,7 @@ processVCF_multi = function(vcf,
              mc.cores = num_cores) %>%
     data_frame(seqs = .) %>%
     mutate(dataNames = map(seqs, names),
-           failed = map_lgl(dataNames, ~any(grepl('result', .x))))
+           failed = purrr::map_lgl(dataNames, ~any(grepl('result', .x))))
 
   failures = processed %>%
     filter(failed) %>%
