@@ -246,7 +246,7 @@ processSnp = function(snp,
       if (alter_aberrant) {
 
         # the digestion sites get randomly fixed later, so this is all that's done here
-        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -269,12 +269,12 @@ processSnp = function(snp,
                      mid = ifelse(type == 'ref', snp$REF, snp$ALT),
                      barcodes = sample(snp$bcPools %>% unlist,
                                        2*nper),
-                     constrseq = type %>% map_chr(~ifelse(.x == 'ref',
+                     constrseq = type %>% purrr::map_chr(~ifelse(.x == 'ref',
                                                           refseq,
                                                           altseq)))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
+      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(reverseComplement(DNAString(.x)))))
     }
 
     res %<>% mutate(sequence = paste0(fwprimer,
@@ -285,7 +285,7 @@ processSnp = function(snp,
                                       barcodes,
                                       'GGC',
                                       revprimer),
-                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
     if (all(res$ndigSites > 3)) {
@@ -294,10 +294,10 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
-          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #   mutate(pattern_loc = purrr::map2(dig_pattern, constr_seq,
           #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
@@ -328,7 +328,7 @@ processSnp = function(snp,
                                    barcodes,
                                    'GGC',
                                    revprimer),
-                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+                 ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
           tidyr::nest(aberrant_pattern:constrseq_fixed,
                       .key = 'site_fix_info')
       } else {
@@ -376,7 +376,7 @@ processSnp = function(snp,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                                  ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
@@ -410,7 +410,7 @@ processSnp = function(snp,
                          enzyme2 %>% reverse,
                          enzyme3 %>% reverse)
 
-        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -431,7 +431,7 @@ processSnp = function(snp,
                      mid = ifelse(type == 'ref', '', snp$ALT), #This line is line is unique to the isINS block
                      barcodes = sample(snp$bcPools %>% unlist,
                                        2*nper),
-                     constrseq = map2_chr(mid, type, ~ifelse(.y == 'ref',
+                     constrseq = purrr::map2_chr(mid, type, ~ifelse(.y == 'ref',
                                                              toString(snpseq),
                                                              altseq)),
                      sequence = paste0(fwprimer,
@@ -442,7 +442,7 @@ processSnp = function(snp,
                                        barcodes,
                                        'GGC',
                                        revprimer),
-                     ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                     ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
@@ -451,10 +451,10 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
-          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #   mutate(pattern_loc = purrr::map2(dig_pattern, constr_seq,
           #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
@@ -485,7 +485,7 @@ processSnp = function(snp,
                                    barcodes,
                                    'GGC',
                                    revprimer),
-                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+                 ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
           tidyr::nest(aberrant_pattern:constrseq_fixed,
                       .key = 'site_fix_info')
       } else {
@@ -532,7 +532,7 @@ processSnp = function(snp,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                                  ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
@@ -564,7 +564,7 @@ processSnp = function(snp,
                          enzyme2 %>% reverse,
                          enzyme3 %>% reverse)
 
-        dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -589,12 +589,12 @@ processSnp = function(snp,
                      mid = ifelse(type == 'ref', snp$REF, snp$ALT),
                      barcodes = sample(snp$bcPools %>% unlist,
                                        2*nper),
-                     constrseq = map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
+                     constrseq = purrr::map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
 
     if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(reverseComplement(DNAString(.x)))))
+      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(reverseComplement(DNAString(.x)))))
     } else {
-      res %<>% mutate(constrseq = constrseq %>% map_chr(~toString(.x)))
+      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(.x)))
     }
 
     res %<>% mutate(sequence = paste0(fwprimer,
@@ -605,7 +605,7 @@ processSnp = function(snp,
                                       barcodes,
                                       'GGC',
                                       revprimer),
-                    ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
 
     #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
 
@@ -614,10 +614,10 @@ processSnp = function(snp,
 
         if (!exists('dig_site_locations')) {
 
-          dig_site_locations = map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+          dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
           # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
-          #   mutate(pattern_loc = map2(dig_pattern, constr_seq,
+          #   mutate(pattern_loc = purrr::map2(dig_pattern, constr_seq,
           #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
           #   pull(pattern_loc) %>%
           #   unique
@@ -648,7 +648,7 @@ processSnp = function(snp,
                                    barcodes,
                                    'GGC',
                                    revprimer),
-                 ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
+                 ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
           tidyr::nest(aberrant_pattern:constrseq_fixed,
                       .key = 'site_fix_info')
       } else {
@@ -693,7 +693,7 @@ processSnp = function(snp,
                                                     barcodes,
                                                     'GGC',
                                                     revprimer),
-                                  ndigSites = sequence %>% map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
+                                  ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
         res = rbind(working, fixed)
       }
     }
