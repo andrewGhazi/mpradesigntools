@@ -1546,15 +1546,17 @@ spread_and_fix_indels = function(vcf_path){
 
   vcf = readr::read_tsv(vcf_path,
                  skip = skipNum + 1,
-                 col_names = vcfColumns)
+                 col_names = vcfColumns,
+                 col_types = readr::cols(.default = readr::col_character()))
 
   vcf %<>%
     purrrlyr::by_row(spreadAllelesAcrossRows) %>%
     dplyr::pull(.out) %>%
     dplyr::bind_rows() %>%
-    dplyr::mutate(fixed_allele = map2_chr(REF, ALT, fix_indels)) %>%
+    dplyr::mutate(fixed_allele = purrr::map2_chr(REF, ALT, fix_indels)) %>%
     tidyr::separate(col = fixed_allele, into = c('REF', 'ALT'), sep = '_')
 
+  names(vcf)[names(vcf) == 'CHROM'] = '#CHROM'
   vcf %>%
     write_tsv(gsub('.vcf', '_fixed.vcf', vcf_path))
   vcf
