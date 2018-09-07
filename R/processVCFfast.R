@@ -71,17 +71,17 @@ generateDelConstruct = function(snpseq, refwidth, upstreamContextRange) {
 
 randomly_change_pattern = function(dig_pattern){
   site_to_change = sample(1:nchar(dig_pattern), size = 1)
-  old_allele = str_sub(dig_pattern, site_to_change, site_to_change)
+  old_allele = stringr::str_sub(dig_pattern, site_to_change, site_to_change)
   allele_options = c('A', 'T', 'C', 'G')[!(c('A', 'T', 'C', 'G') %in% old_allele)]
 
   new_allele = sample(allele_options, size = 1)
 
-  str_sub(dig_pattern, start = site_to_change, end = site_to_change) = new_allele
+  stringr::str_sub(dig_pattern, start = site_to_change, end = site_to_change) = new_allele
   return(dig_pattern)
 }
 
 reassign_pattern = function(construct_seq, aberrant_site_loc, replacement) {
-  str_sub(construct_seq,
+  stringr::str_sub(construct_seq,
           start = BiocGenerics::start(aberrant_site_loc),
           end = BiocGenerics::end(aberrant_site_loc)) = replacement
   return(construct_seq)
