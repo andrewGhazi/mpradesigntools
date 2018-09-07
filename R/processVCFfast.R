@@ -304,8 +304,8 @@ processSnp = function(snp,
           #   unique
         }
 
-        multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
-                                                  ~length(BiocGenerics::width(.x)) != 0)) > 1
+        multiple_aberrant_dig_sites = sum(purrr::map_int(dig_site_locations,
+                                                  ~length(BiocGenerics::width(.x)))) > 1
 
         if (multiple_aberrant_dig_sites) {
           failureRes = data_frame(ID = snp$ID,
