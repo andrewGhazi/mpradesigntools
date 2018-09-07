@@ -823,7 +823,8 @@ processVCF = function(vcf,
 
   vcf = read_tsv(vcf,
                  skip = skipNum + 1,
-                 col_names = vcfColumns)
+                 col_names = vcfColumns,
+                 col_types = readr::cols(.default = readr::col_character()))
 
   #select = dplyr::select
 
@@ -1050,7 +1051,8 @@ processVCF_multi = function(vcf,
 
   vcf = read_tsv(vcf,
                  skip = skipNum + 1,
-                 col_names = vcfColumns)
+                 col_names = vcfColumns,
+                 col_types = readr::cols(.default = readr::col_character()))
 
   #select = dplyr::select
 
