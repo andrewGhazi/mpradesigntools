@@ -150,7 +150,7 @@ randomly_fix = function(snp,
     res_df %<>%
       mutate(aberrant_pattern = aberrant_pattern,
              fixed_pattern = rep(altered_patterns$altered_pattern, times = 2), # give the same altered patterns to both alleles
-             fixed_pattern_index = rep(1:length(altered_patterns), times = 2),
+             fixed_pattern_index = rep(1:(dplyr::n()/2), times = 2),
              constrseq_fixed = map2_chr(constrseq, fixed_pattern,
                                         reassign_pattern,
                                         aberrant_site_loc = aberrant_site))
