@@ -5,7 +5,7 @@
 \title{process an individual SNP}
 \usage{
 processSnp(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer,
-  revprimer, enzyme1, enzyme2, enzyme3)
+  revprimer, enzyme1, enzyme2, enzyme3, alter_aberrant = FALSE)
 }
 \arguments{
 \item{snp}{a data_frame containing the VCF information for one SNP as well as
@@ -21,10 +21,15 @@ SNP}
 \item{fwprimer}{a string containing the forward PCR primer to be used}
 
 \item{revprimer}{a string containing the reverse PCR primer to be used}
+
+\item{enzyme1}{the first restriction enzyme's recognition pattern}
+
+\item{enzyme2}{the first restriction enzyme's recognition pattern}
+
+\item{enzyme3}{the first restriction enzyme's recognition pattern}
 }
 \value{
-a data_frame of labeled sequences or a data_frame listing the SNP and
-  why it failed
+a data_frame of labeled sequences with appropriate information on the changes made
 }
 \description{
 Take one SNP, get its genomic context, concatenate the parts, and check it

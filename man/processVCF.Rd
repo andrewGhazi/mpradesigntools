@@ -6,7 +6,8 @@
 \usage{
 processVCF(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer,
   revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
-  enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA", outPath = NULL)
+  enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA",
+  alter_aberrant = FALSE, outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -32,6 +33,8 @@ downstream of the SNP}
 
 \item{filterPatterns}{a character vector of patterns to filter out of the
 barcode pool (along with their reverse complements)}
+
+\item{alter_aberrant}{under development - logical indicating whether to randomly alter aberrant digestion sites across barcodes}
 
 \item{outPath}{an optional path stating where to write a .tsv of the results}
 }
