@@ -853,7 +853,7 @@ processVCF = function(vcf,
     str_locate(filterRegex) %>%
     as.data.frame() %>%
     as.tbl() %>%
-    rownames_to_column('removeIndex') %>%
+    tibble::rownames_to_column('removeIndex') %>%
     mutate(removeIndex = as.integer(removeIndex)) %>%
     na.omit
 
@@ -1142,11 +1142,37 @@ processVCF_multi = function(vcf,
 
   if (!is.null(outPath)) {
     outPath %<>% gsub('.tsv', '', .) %>% paste0(., '.tsv')
-    write_tsv(successes, path = outPath)
+
+    if (alter_aberrant){
+      tmp = successes %>%
+        filter(!map_lgl(site_fix_info, ~all(class(.x) == 'logical'))) %>%
+        pull(site_fix_info) %>%
+        .[[1]]
+      tmp[2,] = NA
+      empty_fix = tmp[2,]
+
+      successes$site_fix_info = map(output$site_fix_info,
+                                    insert_empty_site_fix_info,
+                                    empty = empty_fix)
+      successes %>%
+        tidyr::unnest %>%
+        write_tsv(path = outPath)
+
+    } else {
+      write_tsv(successes, path = outPath)
+    }
   }
 
   res = list(result = successes, failed = failures)
   return(res)
+}
+
+insert_empty_site_fix_info = function(.x, empty) {
+  if (any(class(.x) == 'data.frame')) {
+    return(.x)
+  } else {
+    return(empty)
+  }
 }
 
 processSnp_multi = function(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer, revprimer, enzyme1, enzyme2, enzyme3){
