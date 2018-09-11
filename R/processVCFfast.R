@@ -139,8 +139,8 @@ randomly_fix = function(snp,
                                   possible_alleles = map(pos_to_change, ~dplyr::setdiff(c('A', 'C', 'G', 'T'),
                                                                                         substr(aberrant_pattern,
                                                                                                .x, .x)))) %>%
-      unnest %>%
-      {sample_n(.,
+      tidyr::unnest() %>%
+      {dplyr::sample_n(.,
                 nrow(res_df) / 2,
                 replace = (nrow(res_df) / 2 > nrow(.)))} %>%
       mutate(altered_pattern = map2_chr(pos_to_change, possible_alleles,
@@ -914,7 +914,7 @@ processVCF = function(vcf,
       filter(failed) %>%
       select(seqs) %>%
       ungroup %>%
-      unnest %>%
+      tidyr::unnest() %>%
       dplyr::rename(reason = result)
 
     res = list(result = NA, failed = failures)
@@ -925,7 +925,7 @@ processVCF = function(vcf,
       filter(failed) %>%
       select(seqs) %>%
       ungroup %>%
-      unnest %>%
+      tidyr::unnest() %>%
       dplyr::rename(reason = result)
 
     successes = processed %>%
