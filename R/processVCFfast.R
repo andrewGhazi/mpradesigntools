@@ -946,25 +946,34 @@ processVCF = function(vcf,
       save(res,
            file = outPath %>% gsub('\\.tsv', '\\.RData', .))
 
-      if (alter_aberrant){
+      if (alter_aberrant) {
 
         output = res$result
-        tmp = res$result %>%
+
+        fixed_sites = res$result %>%
           dplyr::filter(!purrr::map_lgl(site_fix_info,
-                                        ~all(class(.x) == 'logical'))) %>%
-          dplyr::pull(site_fix_info) %>%
-          .[[1]]
+                                        ~all(class(.x) == 'logical')))
 
-        tmp[2,] = NA
-        empty_fix = tmp[2,]
+        if (nrow(fixed_sites) > 0) {
+          tmp = fixed_sites %>%
+            dplyr::pull(site_fix_info) %>%
+            .[[1]]
 
-        output$site_fix_info = purrr::map(output$site_fix_info,
-                                          fix_site_fix_info,
-                                          empty = empty_fix)
+          tmp[2,] = NA
+          empty_fix = tmp[2,]
 
-        output %>%
-          tidyr::unnest() %>%
-          write_tsv(path = outPath)
+          output$site_fix_info = purrr::map(output$site_fix_info,
+                                            fix_site_fix_info,
+                                            empty = empty_fix)
+
+          output %>%
+            tidyr::unnest() %>%
+            write_tsv(path = outPath)
+        } else {
+          res$result %>%
+            write_tsv(path = outPath)
+        }
+
 
       } else {
         write_tsv(successes, path = outPath)
