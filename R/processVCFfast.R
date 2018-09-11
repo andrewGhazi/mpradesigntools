@@ -972,7 +972,12 @@ processVCF = function(vcf,
     }
 
   }
-
+  print('Output construct size distribution')
+  res$result %>%
+    dplyr::mutate(n_bp = nchar(sequence)) %>%
+    dplyr::count(n_bp) %>%
+    {print(.,
+           n = nrow(.))}
   return(res)
 }
 
