@@ -945,12 +945,43 @@ processVCF = function(vcf,
       outPath %<>% gsub('\\.tsv', '', .) %>% paste0(., '.tsv')
       save(res,
            file = outPath %>% gsub('\\.tsv', '\\.RData', .))
-      write_tsv(successes, path = outPath)
+
+      if (alter_aberrant){
+
+        output = res$result
+        tmp = res$result %>%
+          dplyr::filter(!purrr::map_lgl(site_fix_info,
+                                        ~all(class(.x) == 'logical'))) %>%
+          dplyr::pull(site_fix_info) %>%
+          .[[1]]
+
+        tmp[2,] = NA
+        empty_fix = tmp[2,]
+
+        output$site_fix_info = purrr::map(output$site_fix_info,
+                                          fix_site_fix_info,
+                                          empty = empty_fix)
+
+        output %>%
+          tidyr::unnest() %>%
+          write_tsv(path = outPath)
+
+      } else {
+        write_tsv(successes, path = outPath)
+      }
     }
 
   }
 
   return(res)
+}
+
+fix_site_fix_info = function(.x, empty){
+  if (any(class(.x) == 'data.frame')){
+    return(.x)
+  } else {
+    return(empty)
+  }
 }
 
 
