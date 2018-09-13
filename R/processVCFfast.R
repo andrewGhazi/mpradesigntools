@@ -199,7 +199,8 @@ processSnp = function(snp,
                       enzyme1,
                       enzyme2,
                       enzyme3,
-                      alter_aberrant = FALSE){
+                      alter_aberrant = FALSE,
+                      extra_elements = FALSE){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
@@ -1011,7 +1012,8 @@ processVCF = function(vcf,
                          enzyme1,
                          enzyme2,
                          enzyme3,
-                         alter_aberrant = alter_aberrant)) %>%
+                         alter_aberrant = alter_aberrant,
+                         extra_elements = extra_elements)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
