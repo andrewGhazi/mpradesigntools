@@ -239,6 +239,15 @@ processSnp = function(snp,
                                nchar(enzyme1),
                                nchar(enzyme2),
                                12) # 12bp for the barcode
+  } else if (isDEL) {
+    tot_construct_length = sum(nchar(fwprimer),
+                               nchar(revprimer),
+                               upstreamContextRange,
+                               downstreamContextRange,
+                               max(-nchar(snp$REF), -nchar(snp$ALT)),
+                               nchar(enzyme1),
+                               nchar(enzyme2),
+                               12) # 12bp for the barcode
   } else {
     tot_construct_length = sum(nchar(fwprimer),
                                nchar(revprimer),
