@@ -229,14 +229,26 @@ processSnp = function(snp,
                    enzyme3_rev = enzyme3 %>% reverse)
 
   #### check the construct size, shorten if applicable ----
-  tot_construct_length = sum(nchar(fwprimer),
-                             nchar(revprimer),
-                             upstreamContextRange,
-                             downstreamContextRange,
-                             max(nchar(snp$REF), nchar(snp$ALT)),
-                             nchar(enzyme1),
-                             nchar(enzyme2),
-                             12) # the barcode
+  if (isINS) {
+    # insertions are 1bp longer because the ref is empty
+    tot_construct_length = sum(nchar(fwprimer),
+                               nchar(revprimer),
+                               upstreamContextRange,
+                               downstreamContextRange,
+                               max(nchar(snp$REF) + 1 , nchar(snp$ALT) + 1),
+                               nchar(enzyme1),
+                               nchar(enzyme2),
+                               12) # 12bp for the barcode
+  } else {
+    tot_construct_length = sum(nchar(fwprimer),
+                               nchar(revprimer),
+                               upstreamContextRange,
+                               downstreamContextRange,
+                               max(nchar(snp$REF), nchar(snp$ALT)),
+                               nchar(enzyme1),
+                               nchar(enzyme2),
+                               12) # 12bp for the barcode
+  }
 
   if (extra_elements) {
     # extra elements are the TG & GGC Namrata added to CD36 MPRA for some reason
