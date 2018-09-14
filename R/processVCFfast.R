@@ -200,7 +200,8 @@ processSnp = function(snp,
                       enzyme2,
                       enzyme3,
                       alter_aberrant = FALSE,
-                      extra_elements = FALSE){
+                      extra_elements = FALSE,
+                      max_construct_size = NULL){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
@@ -227,6 +228,31 @@ processSnp = function(snp,
                    enzyme2_rev = enzyme2 %>% reverse,
                    enzyme3_rev = enzyme3 %>% reverse)
 
+  #### check the construct size, shorten if applicable ----
+  tot_construct_length = sum(nchar(fwprimer),
+                             nchar(revprimer),
+                             upstreamContextRange,
+                             downstreamContextRange,
+                             max(nchar(snp$REF), nchar(snp$ALT)),
+                             nchar(enzyme1),
+                             nchar(enzyme2),
+                             12) # the barcode
+
+  if (extra_elements) {
+    # extra elements are the TG & GGC Namrata added to CD36 MPRA for some reason
+    tot_construct_length = tot_construct_length + 5
+  }
+
+  if (!is.null(max_construct_size) && tot_construct_length > max_construct_size) {
+    excess = tot_construct_length - max_construct_size
+    amount_to_remove = ceiling(excess / 2)
+
+    upstreamContextRange = upstreamContextRange - amount_to_remove
+    downstreamContextRange = downstreamContextRange - amount_to_remove
+    notes = paste0('Shortened context by ', amount_to_remove, ' bp on each side to account for input maximum construct size')
+  }
+
+  #### Start generating the constructs depending on SNP type
   if (isSNV) {
 
     rangestart = snp$POS - upstreamContextRange
@@ -846,6 +872,12 @@ processSnp = function(snp,
     res$site_fix_info = NA
   }
 
+  if (exists(notes)) {
+    res$notes = notes
+  } else {
+    res$notes = NA
+  }
+
   return(res)
 }
 
@@ -870,8 +902,15 @@ processSnp = function(snp,
 #' @param filterPatterns a character vector of patterns to filter out of the
 #'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
-#' @param alter_aberrant under development - logical indicating whether to randomly alter aberrant digestion sites across barcodes
-#' @param extra_elements under development - logical indicating whether to include the extra TG / GGC as shown on the sequence diagram on the shiny app
+#' @param alter_aberrant under development - logical indicating whether to
+#'   randomly alter aberrant digestion sites across barcodes
+#' @param extra_elements under development - logical indicating whether to
+#'   include the extra TG / GGC as shown on the sequence diagram on the shiny
+#'   app
+#' @param max_construct_size under development - integer indicating the maximum
+#'   construct size to generate. If provided, constructs that end up longer than
+#'   this have sequence context evenly removed from both sides until
+#'   sufficiently short.
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
 #'   containing patterns that may perform badly in a MPRA setting. For example,
 #'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
@@ -933,6 +972,7 @@ processVCF = function(vcf,
                       filterPatterns = 'AATAAA',
                       alter_aberrant = FALSE,
                       extra_elements = FALSE,
+                      max_construct_size = NULL,
                       outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
@@ -1013,7 +1053,8 @@ processVCF = function(vcf,
                          enzyme2,
                          enzyme3,
                          alter_aberrant = alter_aberrant,
-                         extra_elements = extra_elements)) %>%
+                         extra_elements = extra_elements,
+                         max_construct_size = max_construct_size)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 
@@ -1028,7 +1069,7 @@ processVCF = function(vcf,
              totIndex = 1:nrow(.)) %>%
       rename(allele = mid,
              barcode = barcodes) %>%
-      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info)
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info, notes)
 
     res = list(result = successes, failed = NA)
 
@@ -1066,7 +1107,7 @@ processVCF = function(vcf,
              totIndex = 1:nrow(.)) %>%
       dplyr::rename(allele = mid,
              barcode = barcodes) %>%
-      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info)
+      select(ID, type, allele, snpIndex, totIndex, barcode, sequence, site_fix_info, notes)
 
     res = list(result = successes, failed = failures)
 
