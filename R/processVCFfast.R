@@ -917,9 +917,12 @@ processSnp = function(snp,
 #'   downstream of the SNP
 #' @param fwprimer a string containing the forward PCR primer to be used
 #' @param revprimer a string containing the reverse PCR primer to be used
-#' @param enzyme1 a string containing the pattern for the first restriction enzyme. Defaults to KpnI.
-#' @param enzyme2 a string containing the pattern for the second restriction enzyme. Defaults to XbaI.
-#' @param enzyme3 a string containing the pattern for the third restriction enzyme. Defaults to SfiI.
+#' @param enzyme1 a string containing the pattern for the first restriction
+#'   enzyme. Defaults to KpnI.
+#' @param enzyme2 a string containing the pattern for the second restriction
+#'   enzyme. Defaults to XbaI.
+#' @param enzyme3 a string containing the pattern for the third restriction
+#'   enzyme. Defaults to SfiI.
 #' @param filterPatterns a character vector of patterns to filter out of the
 #'   barcode pool (along with their reverse complements)
 #' @param outPath an optional path stating where to write a .tsv of the results
@@ -932,6 +935,8 @@ processSnp = function(snp,
 #'   construct size to generate. If provided, constructs that end up longer than
 #'   this have sequence context evenly removed from both sides until
 #'   sufficiently short.
+#' @param barcode_set string indicating the barcode set to use. See below for
+#'   details.
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
 #'   containing patterns that may perform badly in a MPRA setting. For example,
 #'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
@@ -951,6 +956,16 @@ processSnp = function(snp,
 #'   however it is necessary to check for it's presence in the output sequences
 #'   as it is used when preparing the plasmid library. Aberrant \code{enzyme3}
 #'   sites could cause the library preparation to fail.
+#'
+#'   Alternative barcode sets may be used by specifying the \code{barcode_set}
+#'   argument to \code{processVCF} one of the following values. The first number
+#'   indicates the length of the barcodes in basepairs, the second indicates the
+#'   number of errors correctable while still being able to identify the
+#'   original barcode. These are provided by the freebarcodes package, detailed
+#'   at the publication below and available from the subsequently listed github
+#'   repository. The original barcode set provided with mpradesigntools is
+#'   available as the \code{twelvemers} barcode set. See the README on github
+#'   for a listing of the number of barcodes available per set.
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -994,6 +1009,7 @@ processVCF = function(vcf,
                       alter_aberrant = FALSE,
                       extra_elements = FALSE,
                       max_construct_size = NULL,
+                      barcode_set = 'barcodes16-1',
                       outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
@@ -1026,11 +1042,14 @@ processVCF = function(vcf,
     .$.out %>%
     Reduce('rbind', .)
 
+
+  mers = get_barcode_set(barcode_set)
+
   if (nrow(vcf)*2*nper > 1140292) {
     stop('Your design requests requires more barcodes than is possible')
   }
 
-  mers = twelvemers
+
 
   filterRegex = paste(c(filterPatterns, # the patterns
                         filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
@@ -1908,5 +1927,9 @@ spread_and_fix_indels = function(vcf_path){
   vcf %>%
     write_tsv(gsub('.vcf', '_fixed.vcf', vcf_path))
   vcf
+}
+
+get_barcode_set = function(barcode_set) {
+  load('')
 }
 

@@ -1,6 +1,7 @@
 # Script to import free-barcodes pregenerated barcodes list and put them in data/ as usable objects
 
 library(tidyverse)
+library(parallel)
 
 bc_files = list.files('/mnt/bigData2/resources/freebarcodes/freebarcodes-master/barcodes',
                       pattern = 'txt',
@@ -8,19 +9,22 @@ bc_files = list.files('/mnt/bigData2/resources/freebarcodes/freebarcodes-master/
 
 
 read_bc_file_write_rdata = function(bc_file) {
-  bc_vec = read_tsv(bc_file,
-                    col_names = 'bc') %>%
-    pull(bc)
+  set_name = stringr::str_extract(bc_file, 'barcodes[0-9]+-[0-9]')
+  assign(set_name,
+         read_tsv(bc_file,
+                  col_names = 'bc') %>%
+           pull(bc))
 
-  save(bc_vec,
+  save(list = c(set_name),
        file = paste0('~/mpradesigntools/data/',
-                     stringr::str_extract(bc_file, 'barcodes[0-9]+-[0-9]'),
+                     set_name,
                      '.RData'))
 
 }
 
-map(bc_files,
-    read_bc_file_write_rdata)
+mclapply(bc_files,
+         read_bc_file_write_rdata,
+         mc.cores = 10)
 
 #### Make the table for the readme
 
