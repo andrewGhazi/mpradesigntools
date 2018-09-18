@@ -3,9 +3,9 @@
 library(tidyverse)
 library(parallel)
 
-bc_files = list.files('/mnt/bigData2/resources/freebarcodes/freebarcodes-master/barcodes',
-                      pattern = 'txt',
-                      full.names = TRUE)
+# bc_files = list.files('/mnt/bigData2/resources/freebarcodes/freebarcodes-master/barcodes',
+#                       pattern = 'txt',
+#                       full.names = TRUE)
 
 
 read_bc_file_write_rdata = function(bc_file) {
@@ -22,9 +22,9 @@ read_bc_file_write_rdata = function(bc_file) {
 
 }
 
-mclapply(bc_files,
-         read_bc_file_write_rdata,
-         mc.cores = 10)
+# mclapply(bc_files,
+#          read_bc_file_write_rdata,
+#          mc.cores = 10)
 
 #### Make the table for the readme ----
 
@@ -36,14 +36,14 @@ count_bc_file_lines = function(bc_file) {
     as.numeric
 }
 
-data_frame(barcode_set = map_chr(bc_files,
-                                 ~stringr::str_extract(.x, 'barcodes[0-9]+-[0-9]')),
-           n_barcodes = map_dbl(bc_files,
-                                count_bc_file_lines)) %>%
-  add_case(barcode_set = 'twelvemers',
-           n_barcodes = 1140292) %>%
-  arrange(barcode_set) %>%
-  knitr::kable()
+# data_frame(barcode_set = map_chr(bc_files,
+#                                  ~stringr::str_extract(.x, 'barcodes[0-9]+-[0-9]')),
+#            n_barcodes = map_dbl(bc_files,
+#                                 count_bc_file_lines)) %>%
+#   add_case(barcode_set = 'twelvemers',
+#            n_barcodes = 1140292) %>%
+#   arrange(barcode_set) %>%
+#   knitr::kable()
 
 #### Add documentation for barcode sets ----
 
@@ -57,5 +57,5 @@ write_data_documentation = function(bc_file){
   return('doneskies')
 }
 
-map(bc_files,
-    write_data_documentation)
+# map(bc_files,
+#     write_data_documentation)
