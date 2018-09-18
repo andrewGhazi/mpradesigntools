@@ -47,8 +47,6 @@ Currently the main function of MPRA Design Tools package is to design a set of b
 5 + .01 * Number of barcodes per allele * Number of SNPs in VCF * 2 (for ref/alt alleles)
 ```
 
-Currently, barcodes are constrained to being 12bp in length.
-
 # VCF Input constraints
 
 Only the CHROM, POS, REF, and ALT columns are used. The INFO column is used only for detecting reverse strand constructs.
