@@ -141,8 +141,8 @@ randomly_fix = function(snp,
                                                                                                .x, .x)))) %>%
       tidyr::unnest() %>%
       {dplyr::sample_n(.,
-                nrow(res_df) / 2,
-                replace = (nrow(res_df) / 2 > nrow(.)))} %>%
+                       nrow(res_df) / 2,
+                       replace = (nrow(res_df) / 2 > nrow(.)))} %>%
       mutate(altered_pattern = map2_chr(pos_to_change, possible_alleles,
                                         change_pattern,
                                         ab_pattern = aberrant_pattern))
@@ -228,7 +228,7 @@ processSnp = function(snp,
                    enzyme2_rev = enzyme2 %>% reverse,
                    enzyme3_rev = enzyme3 %>% reverse)
 
-  bc_length = nchar(snp$bcPools[1])
+  bc_length = nchar(snp$bcPools[[1]][1])
   #### check the construct size, shorten if applicable ----
   if (isINS) {
     # insertions are 1bp longer because the ref is empty
