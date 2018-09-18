@@ -26,7 +26,7 @@ mclapply(bc_files,
          read_bc_file_write_rdata,
          mc.cores = 10)
 
-#### Make the table for the readme
+#### Make the table for the readme ----
 
 count_bc_file_lines = function(bc_file) {
   system(paste0('wc -l ',
@@ -44,3 +44,18 @@ data_frame(barcode_set = map_chr(bc_files,
            n_barcodes = 1140292) %>%
   arrange(barcode_set) %>%
   knitr::kable()
+
+#### Add documentation for barcode sets ----
+
+write_data_documentation = function(bc_file){
+  set_name = stringr::str_extract(bc_file, 'barcodes[0-9]+-[0-9]')
+
+  write(paste0('#\' ', set_name, '\n', '\'', set_name, '\'\n'),
+        file = 'R/data.R',
+        append = TRUE)
+
+  return('doneskies')
+}
+
+map(bc_files,
+    write_data_documentation)
