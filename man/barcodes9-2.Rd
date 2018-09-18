@@ -7,16 +7,8 @@
 \format{An object of class \code{character} of length 12.}
 \usage{
 barcodes9-2
-
-barcodes9-2
-
-barcodes9-2
 }
 \description{
-barcodes9-2
-
-barcodes9-2
-
 barcodes9-2
 }
 \keyword{datasets}
