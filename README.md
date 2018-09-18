@@ -121,6 +121,6 @@ processVCF(vcf = '/path/to/the.vcf',
 *    parallelization  
 *    randomized alterations to aberrant digestion sites  
 *    bed file to Sharpr-MPRA library oligo design  
-*    Optimized barcode pools
+*    ~~Optimized barcode pools~~ ✔
 
 If you are interested in a subset of these features or have other feature requests, please let us know to inform our implementation prioritization. You can do so by opening an issue on this repository or contacting the first and corresponding authors of the publication, listed above.
