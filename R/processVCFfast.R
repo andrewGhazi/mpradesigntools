@@ -1010,7 +1010,7 @@ processVCF = function(vcf,
                       alter_aberrant = FALSE,
                       extra_elements = FALSE,
                       max_construct_size = NULL,
-                      barcode_set = 'barcodes16-1',
+                      barcode_set = 'twelvemers',
                       outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
