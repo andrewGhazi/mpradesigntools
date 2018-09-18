@@ -4,10 +4,12 @@
 \alias{processVCF}
 \title{Process VCF into MPRA sequences}
 \usage{
-processVCF(vcf, nper, upstreamContextRange, downstreamContextRange, fwprimer,
-  revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
+processVCF(vcf, nper, upstreamContextRange, downstreamContextRange,
+  fwprimer, revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
   enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA",
-  alter_aberrant = FALSE, outPath = NULL)
+  alter_aberrant = FALSE, extra_elements = FALSE,
+  max_construct_size = NULL, barcode_set = "barcodes16-1",
+  outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -25,16 +27,32 @@ downstream of the SNP}
 
 \item{revprimer}{a string containing the reverse PCR primer to be used}
 
-\item{enzyme1}{a string containing the pattern for the first restriction enzyme. Defaults to KpnI.}
+\item{enzyme1}{a string containing the pattern for the first restriction
+enzyme. Defaults to KpnI.}
 
-\item{enzyme2}{a string containing the pattern for the second restriction enzyme. Defaults to XbaI.}
+\item{enzyme2}{a string containing the pattern for the second restriction
+enzyme. Defaults to XbaI.}
 
-\item{enzyme3}{a string containing the pattern for the third restriction enzyme. Defaults to SfiI.}
+\item{enzyme3}{a string containing the pattern for the third restriction
+enzyme. Defaults to SfiI.}
 
 \item{filterPatterns}{a character vector of patterns to filter out of the
 barcode pool (along with their reverse complements)}
 
-\item{alter_aberrant}{under development - logical indicating whether to randomly alter aberrant digestion sites across barcodes}
+\item{alter_aberrant}{under development - logical indicating whether to
+randomly alter aberrant digestion sites across barcodes}
+
+\item{extra_elements}{under development - logical indicating whether to
+include the extra TG / GGC as shown on the sequence diagram on the shiny
+app}
+
+\item{max_construct_size}{under development - integer indicating the maximum
+construct size to generate. If provided, constructs that end up longer than
+this have sequence context evenly removed from both sides until
+sufficiently short.}
+
+\item{barcode_set}{string indicating the barcode set to use. See below for
+details.}
 
 \item{outPath}{an optional path stating where to write a .tsv of the results}
 }
@@ -46,7 +64,7 @@ A list of two data_frames. The first, named 'result', is a data_frame
 }
 \description{
 \code{processVCF} takes a VCF of SNPs (preferably from dbSNP) and turns them
-into a set of labeled MPRA sequences barcoded with inert twelvemers
+into a set of labeled MPRA sequences barcoded with inert n-mers
 }
 \details{
 The \code{"filterPatterns"} argument is used to remove barcodes
@@ -68,4 +86,14 @@ The \code{"filterPatterns"} argument is used to remove barcodes
   however it is necessary to check for it's presence in the output sequences
   as it is used when preparing the plasmid library. Aberrant \code{enzyme3}
   sites could cause the library preparation to fail.
+
+  Alternative barcode sets may be used by specifying the \code{barcode_set}
+  argument to \code{processVCF} one of the following values. The first number
+  indicates the length of the barcodes in basepairs, the second indicates the
+  number of errors correctable while still being able to identify the
+  original barcode. These are provided by the freebarcodes package, detailed
+  at the publication below and available from the subsequently listed github
+  repository. The original barcode set provided with mpradesigntools is
+  available as the \code{twelvemers} barcode set. See the README on github
+  for a listing of the number of barcodes available per set.
 }

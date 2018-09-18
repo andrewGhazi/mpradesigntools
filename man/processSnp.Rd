@@ -4,8 +4,9 @@
 \alias{processSnp}
 \title{process an individual SNP}
 \usage{
-processSnp(snp, nper, upstreamContextRange, downstreamContextRange, fwprimer,
-  revprimer, enzyme1, enzyme2, enzyme3, alter_aberrant = FALSE)
+processSnp(snp, nper, upstreamContextRange, downstreamContextRange,
+  fwprimer, revprimer, enzyme1, enzyme2, enzyme3, alter_aberrant = FALSE,
+  extra_elements = FALSE, max_construct_size = NULL)
 }
 \arguments{
 \item{snp}{a data_frame containing the VCF information for one SNP as well as

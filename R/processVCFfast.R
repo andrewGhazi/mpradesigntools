@@ -908,7 +908,7 @@ processSnp = function(snp,
 #' Process VCF into MPRA sequences
 #'
 #' \code{processVCF} takes a VCF of SNPs (preferably from dbSNP) and turns them
-#' into a set of labeled MPRA sequences barcoded with inert twelvemers
+#' into a set of labeled MPRA sequences barcoded with inert n-mers
 #' @param vcf the path to the input VCF
 #' @param nper the number of barcoded sequences to be generated per allele per
 #'   SNP
@@ -1050,7 +1050,7 @@ processVCF = function(vcf,
 
   if (nrow(vcf)*2*nper > length(mers)) {
     if (barcode_set == 'barcodes16-1') {
-      stop('Your design requires more barcodes than is possible with the largest available barcode_set. Poke the developer about integrating the freebarcodes barcode-concatenation trick.')
+      stop('Your design requires more barcodes than is possible with the largest available barcode_set.\n\nPoke the developer about integrating the freebarcodes barcode-concatenation trick.')
     } else {
       stop('Your design requires more barcodes than is possible with the selected barcode_set. Try a bigger set.')
     }
