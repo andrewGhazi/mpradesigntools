@@ -228,6 +228,7 @@ processSnp = function(snp,
                    enzyme2_rev = enzyme2 %>% reverse,
                    enzyme3_rev = enzyme3 %>% reverse)
 
+  bc_length = nchar(snp$bcPools[1])
   #### check the construct size, shorten if applicable ----
   if (isINS) {
     # insertions are 1bp longer because the ref is empty
@@ -238,7 +239,7 @@ processSnp = function(snp,
                                max(nchar(snp$REF) + 1 , nchar(snp$ALT) + 1),
                                nchar(enzyme1),
                                nchar(enzyme2),
-                               12) # 12bp for the barcode
+                               bc_length)
   } else if (isDEL) {
     tot_construct_length = sum(nchar(fwprimer),
                                nchar(revprimer),
@@ -247,7 +248,7 @@ processSnp = function(snp,
                                max(-nchar(snp$REF), -nchar(snp$ALT)),
                                nchar(enzyme1),
                                nchar(enzyme2),
-                               12) # 12bp for the barcode
+                               bc_length)
   } else {
     tot_construct_length = sum(nchar(fwprimer),
                                nchar(revprimer),
@@ -256,7 +257,7 @@ processSnp = function(snp,
                                max(nchar(snp$REF), nchar(snp$ALT)),
                                nchar(enzyme1),
                                nchar(enzyme2),
-                               12) # 12bp for the barcode
+                               bc_length)
   }
 
   if (extra_elements) {
@@ -1043,10 +1044,16 @@ processVCF = function(vcf,
     Reduce('rbind', .)
 
 
-  mers = get_barcode_set(barcode_set)
+  #mers = twelvemers
 
-  if (nrow(vcf)*2*nper > 1140292) {
-    stop('Your design requests requires more barcodes than is possible')
+  mers = get(barcode_set)
+
+  if (nrow(vcf)*2*nper > length(mers)) {
+    if (barcode_set == 'barcodes16-1') {
+      stop('Your design requires more barcodes than is possible with the largest available barcode_set. Poke the developer about integrating the freebarcodes barcode-concatenation trick.')
+    } else {
+      stop('Your design requires more barcodes than is possible with the selected barcode_set. Try a bigger set.')
+    }
   }
 
 
@@ -1065,12 +1072,15 @@ processVCF = function(vcf,
     mutate(removeIndex = as.integer(removeIndex)) %>%
     na.omit
 
-  mers %<>% .[-barcodeFilter$removeIndex]
+  if (nrow(barcodeFilter) > 1) {
+    mers %<>% .[-barcodeFilter$removeIndex]
+  }
+
   print(paste0('Removed ',
                nrow(barcodeFilter),
                ' barcodes from the usable pool out of the original ',
-               length(twelvemers),
-               ' (', round(100*nrow(barcodeFilter)/length(twelvemers), digits = 3), '%)'))
+               length(mers),
+               ' (', round(100*nrow(barcodeFilter)/length(mers), digits = 3), '%)'))
 
 
   #Create a pool of barcodes for each snp
@@ -1927,9 +1937,5 @@ spread_and_fix_indels = function(vcf_path){
   vcf %>%
     write_tsv(gsub('.vcf', '_fixed.vcf', vcf_path))
   vcf
-}
-
-get_barcode_set = function(barcode_set) {
-  load('')
 }
 
