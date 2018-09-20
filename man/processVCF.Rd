@@ -8,8 +8,8 @@ processVCF(vcf, nper, upstreamContextRange, downstreamContextRange,
   fwprimer, revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
   enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA",
   alter_aberrant = FALSE, extra_elements = FALSE,
-  max_construct_size = NULL, barcode_set = "barcodes16-1",
-  outPath = NULL)
+  max_construct_size = NULL, barcode_set = "twelvemers",
+  ensure_all_4_nuc = TRUE, outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -54,6 +54,9 @@ sufficiently short.}
 \item{barcode_set}{string indicating the barcode set to use. See below for
 details.}
 
+\item{ensure_all_4_nuc}{logical -- if true, barcodes are filtered to only
+those containaing all four nucleotides.}
+
 \item{outPath}{an optional path stating where to write a .tsv of the results}
 }
 \value{
@@ -95,5 +98,11 @@ The \code{"filterPatterns"} argument is used to remove barcodes
   at the publication below and available from the subsequently listed github
   repository. The original barcode set provided with mpradesigntools is
   available as the \code{twelvemers} barcode set. See the README on github
-  for a listing of the number of barcodes available per set.
+  for a listing of the number of barcodes available per set. The freebarcodes
+  sets only meet the traditional MPRA barcode requirements to varying degree.
+  \itemize{
+  \item contains all four nucleotides
+  \item doesn't contain runs of 4 or more of the same nucleotide
+  \item doesn't contain miR seed sequences
+  }
 }

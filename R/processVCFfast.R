@@ -939,6 +939,8 @@ processSnp = function(snp,
 #'   sufficiently short.
 #' @param barcode_set string indicating the barcode set to use. See below for
 #'   details.
+#' @param ensure_all_4_nuc logical -- if true, barcodes are filtered to only
+#'   those containaing all four nucleotides.
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
 #'   containing patterns that may perform badly in a MPRA setting. For example,
 #'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
@@ -967,7 +969,13 @@ processSnp = function(snp,
 #'   at the publication below and available from the subsequently listed github
 #'   repository. The original barcode set provided with mpradesigntools is
 #'   available as the \code{twelvemers} barcode set. See the README on github
-#'   for a listing of the number of barcodes available per set.
+#'   for a listing of the number of barcodes available per set. The freebarcodes
+#'   sets only meet the traditional MPRA barcode requirements to varying degree.
+#'   \itemize{
+#'   \item contains all four nucleotides
+#'   \item doesn't contain runs of 4 or more of the same nucleotide
+#'   \item doesn't contain miR seed sequences
+#'   }
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
@@ -1012,6 +1020,7 @@ processVCF = function(vcf,
                       extra_elements = FALSE,
                       max_construct_size = NULL,
                       barcode_set = 'twelvemers',
+                      ensure_all_4_nuc = TRUE,
                       outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
@@ -1046,8 +1055,23 @@ processVCF = function(vcf,
 
 
   #mers = twelvemers
+  # list.files('data') %>% gsub('\\.RData|\\.rda', '', .) %>% dput()
+  available_sets = c("barcodes10-1", "barcodes10-2", "barcodes11-1", "barcodes11-2",
+                     "barcodes12-1", "barcodes12-2", "barcodes13-1", "barcodes13-2",
+                     "barcodes14-1", "barcodes14-2", "barcodes15-1", "barcodes15-2",
+                     "barcodes16-1", "barcodes16-2", "barcodes17-2", "barcodes3-1",
+                     "barcodes4-1", "barcodes5-1", "barcodes5-2", "barcodes6-1", "barcodes6-2",
+                     "barcodes7-1", "barcodes7-2", "barcodes8-1", "barcodes8-2", "barcodes9-1",
+                     "barcodes9-2", "twelvemers")
 
-  mers = get(barcode_set)
+  if (length(barcode_set) == 1 & barcode_set %in% available_sets){
+    mers = get(barcode_set)
+  } else if (length(barcode_set) > 1 & class(barcode_set) == 'character') {
+    print('Note: Using custom barcode set. Users recommended to ensure barcode set meets appropriate barcode parameters for length, inert properties, etc....')
+    mers = barcode_set
+  } else {
+    stop('Input barcode set improperly formatted. Use the names of one of the available sets or a character vector of same-length DNA n-mers.')
+  }
 
   if (nrow(vcf)*2*nper > length(mers)) {
     if (barcode_set == 'barcodes16-1') {
@@ -1057,12 +1081,19 @@ processVCF = function(vcf,
     }
   }
 
+  if (ensure_all_4_nuc) {
+    print('Filtering barcode set to ensure that all barcodes contain all four barcodes...')
+    start_amount = length(mers)
+    mers = mers[purrr::map_lgl(mers, matches_all_nucleotides)]
+    end_amount = length(mers)
+
+    print(paste0('Removed ', start_amount - end_amount, ' barcodes out of ', start_amount, ' (', round((start_amount - end_amount)/start_amount * 100, digits = 2), '%)'))
+  }
 
 
   filterRegex = paste(c(filterPatterns, # the patterns
                         filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
                       collapse = '|')
-
 
   print('Filtering undesired barcode patterns...')
   barcodeFilter = mers %>%
@@ -1086,8 +1117,6 @@ processVCF = function(vcf,
 
   #Create a pool of barcodes for each snp
   shuffled_mers = mers[sort(runif(length(mers)), index.return = TRUE)$ix]
-
-
 
   vcf %<>% mutate(bcPools = split(shuffled_mers,
                                   ceiling(1:length(shuffled_mers) %% nrow(vcf))),
@@ -1223,6 +1252,12 @@ fix_site_fix_info = function(.x, empty){
   } else {
     return(empty)
   }
+}
+
+matches_all_nucleotides = function(bc){
+  # https://stackoverflow.com/questions/469913/regular-expressions-is-there-an-and-operator
+  grepl('(?=.*A)(?=.*C)(?=.*G)(?=.*T)', bc,
+        perl = TRUE)
 }
 
 fix_indels = function(REF, ALT){
