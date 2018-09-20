@@ -937,8 +937,8 @@ processSnp = function(snp,
 #'   construct size to generate. If provided, constructs that end up longer than
 #'   this have sequence context evenly removed from both sides until
 #'   sufficiently short.
-#' @param barcode_set string indicating the barcode set to use. See below for
-#'   details.
+#' @param barcode_set string - indicating the barcode set to use. Alternatively
+#'   a vector containing custom barcodes. See below for details.
 #' @param ensure_all_4_nuc logical -- if true, barcodes are filtered to only
 #'   those containaing all four nucleotides.
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
@@ -971,11 +971,10 @@ processSnp = function(snp,
 #'   available as the \code{twelvemers} barcode set. See the README on github
 #'   for a listing of the number of barcodes available per set. The freebarcodes
 #'   sets only meet the traditional MPRA barcode requirements to varying degree.
-#'   \itemize{
-#'   \item contains all four nucleotides
-#'   \item doesn't contain runs of 4 or more of the same nucleotide
-#'   \item doesn't contain miR seed sequences
-#'   }
+#'   \itemize{ \item contains all four nucleotides \item doesn't contain runs of
+#'   4 or more of the same nucleotide \item doesn't contain miR seed sequences }
+#'   Alternatively, \code{barcode_set} can be a character vector containing a
+#'   custom set of all barcodes you'd like to use.
 #' @return A list of two data_frames. The first, named 'result', is a data_frame
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
 #'   data_frame listing the SNPs that are not able to have MPRA sequences
