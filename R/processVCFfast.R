@@ -318,7 +318,8 @@ processSnp = function(snp,
                      type = rep(c('ref', 'alt'), each = nper),
                      mid = ifelse(type == 'ref', snp$REF, snp$ALT),
                      barcodes = sample(snp$bcPools %>% unlist,
-                                       2*nper),
+                                       2*nper,
+                                       replace = FALSE),
                      constrseq = type %>% purrr::map_chr(~ifelse(.x == 'ref',
                                                           refseq,
                                                           altseq)))
@@ -1084,7 +1085,12 @@ processVCF = function(vcf,
 
 
   #Create a pool of barcodes for each snp
-  vcf %<>% mutate(bcPools = split(mers, sample(1:nrow(vcf), length(mers), replace = TRUE)),
+  shuffled_mers = mers[sort(runif(length(mers)), index.return = TRUE)$ix]
+
+
+
+  vcf %<>% mutate(bcPools = split(shuffled_mers,
+                                  ceiling(1:length(shuffled_mers) %% nrow(vcf))),
                   reverseGene = grepl('MPRAREV', INFO),
                   snpNums = 1:nrow(vcf),
                   snpTot = nrow(vcf))
