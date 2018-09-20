@@ -103,16 +103,17 @@ https://github.com/finkelsteinlab/freebarcodes
 ## Example
 ```{r}
 processVCF(vcf = '/path/to/the.vcf',
-           nper = 10,
-           upstreamContextRange = 75,
-           downstreamContextRange = 75,
-           fwprimer = 'ACTGGCCAG',
-           revprimer = 'CTCGGCGGCC',
-           filterPatterns = "AATAAA",
-           enzyme1 = 'GGTACC',
-           enzyme2 = 'TCTAGA',
-           enzyme3 = 'GGCCNNNNNGGCC',
-           alter_aberrant = FALSE)
+           nper = 14,
+           upstreamContextRange = 55,
+           downstreamContextRange = 55,
+           outPath = '/path/to/the/output.tsv',
+           fwprimer = 'ACTGGCCGCTTCACTG',
+           revprimer = 'AGATCGGAAGAGCGTCG',
+           alter_aberrant = TRUE,
+           extra_elements = FALSE,
+           max_construct_size = 170,
+           barcode_set = 'barcodes14-1',
+           ensure_all_4_nuc = TRUE)
 ```
 
 # Planned Features  
