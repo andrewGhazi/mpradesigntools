@@ -1095,6 +1095,7 @@ processVCF = function(vcf,
                       collapse = '|')
 
   print('Filtering undesired barcode patterns...')
+  undesired_start_n = length(mers)
   barcodeFilter = mers %>%
     str_locate(filterRegex) %>%
     as.data.frame() %>%
@@ -1106,12 +1107,13 @@ processVCF = function(vcf,
   if (nrow(barcodeFilter) > 1) {
     mers %<>% .[-barcodeFilter$removeIndex]
   }
+  undesired_end_n = length(mers)
 
   print(paste0('Removed ',
-               nrow(barcodeFilter),
+               undesired_start_n - undesired_end_n,
                ' barcodes from the usable pool out of the original ',
-               length(mers),
-               ' (', round(100*nrow(barcodeFilter)/length(mers), digits = 3), '%)'))
+               undesired_start_n,
+               ' (', round(100*(undesired_start_n - undesired_end_n)/undesired_start_n, digits = 3), '%)'))
 
 
   #Create a pool of barcodes for each snp
