@@ -119,6 +119,10 @@ processVCF(vcf = '/path/to/the.vcf',
            ensure_all_4_nuc = TRUE)
 ```
 
+# Downstream analysis  
+
+Once you've performed your MPRA and have your sequencing results, check out [malacoda](https://github.com/andrewGhazi/malacoda) for QC and statistical analysis of your results!
+
 # Planned Features  
 
 *    mm10 genomic context  
