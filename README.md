@@ -127,7 +127,7 @@ Once you've performed your MPRA and have your sequencing results, check out [mal
 
 *    mm10 genomic context  
 *    parallelization  
-*    randomized alterations to aberrant digestion sites  
+*    ~~randomized alterations to aberrant digestion sites~~ ✔
 *    bed file to Sharpr-MPRA library oligo design  
 *    automated handling of RV SNPs
 *    ~~Optimized barcode pools~~ ✔
