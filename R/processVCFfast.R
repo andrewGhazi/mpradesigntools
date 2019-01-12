@@ -270,7 +270,7 @@ processSnp = function(snp,
   }
 
   if (flip_RV & grepl('RV', snp$INFO)) {
-    notes = c(notes, 'The alleles for this SNP were flipped from the input VCF because of the presence of the RV tag in the INFO field.')
+    notes = c(notes, 'The alleles for this SNP were flipped from the input VCF because of the presence of the RV tag in the INFO field. This feature is new so please double-check the result. ')
 
     if (isSNV){
 
@@ -306,7 +306,7 @@ processSnp = function(snp,
 
     upstreamContextRange = upstreamContextRange - amount_to_remove
     downstreamContextRange = downstreamContextRange - amount_to_remove
-    notes = c(notes, paste0('Shortened context by ', amount_to_remove, ' bp on each side to account for input maximum construct size'))
+    notes = c(notes, paste0(' Shortened context by ', amount_to_remove, ' bp on each side to account for input maximum construct size. '))
   }
 
   #### Start generating the constructs depending on SNP type
