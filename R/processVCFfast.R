@@ -201,7 +201,8 @@ processSnp = function(snp,
                       enzyme3,
                       alter_aberrant = FALSE,
                       extra_elements = FALSE,
-                      max_construct_size = NULL){
+                      max_construct_size = NULL,
+                      flip_RV = TRUE){
   # snp is one row from the expanded vcf, including the reverseGene column which
   # indicates whether or not to use the reverse complement genomic context. It
   # also has a dedicated pool of barcodes to select from
@@ -214,6 +215,9 @@ processSnp = function(snp,
   isSNV = (snp$REF %in% c('A', 'C', 'G', 'T') && snp$ALT %in% c('A', 'C', 'G', 'T')) #look at me interchanging between SNV and SNP willy-nilly ####
   isINS = snp$REF == '-'
   isDEL = snp$ALT == '-'
+
+  notes = NULL # initialize
+
 
   #There are three code blocks below for each of these cases. Use RStudio's code folding to open up only the one of interest.
   # This could probably be made to be 1/3 the length by writing a function that
@@ -265,13 +269,44 @@ processSnp = function(snp,
     tot_construct_length = tot_construct_length + 5
   }
 
+  if (flip_RV & grepl('RV', snp$INFO)) {
+    notes = c(notes, 'The alleles for this SNP were flipped from the input VCF because of the presence of the RV tag in the INFO field.')
+
+    if (isSNV){
+
+      snp$REF = snp$REF %>%
+        Biostrings::DNAString() %>%
+        Biostrings::complement() %>%
+        Biostrings::toString()
+
+      snp$ALT = snp$ALT %>%
+        Biostrings::DNAString() %>%
+        Biostrings::complement() %>%
+        Biostrings::toString()
+    } else if (isINS) {
+
+      # If it's an insertion, REF = '-', so you only need to flip ALT
+      snp$ALT = snp$ALT %>%
+        Biostrings::DNAString() %>%
+        Biostrings::complement() %>%
+        Biostrings::toString()
+    } else {
+      # else it's a deletion
+      # if it's a deletion, ALT = '-', so you only need to flip REF
+      snp$REF = snp$REF %>%
+        Biostrings::DNAString() %>%
+        Biostrings::complement() %>%
+        Biostrings::toString()
+    }
+  }
+
   if (!is.null(max_construct_size) && tot_construct_length > max_construct_size) {
     excess = tot_construct_length - max_construct_size
     amount_to_remove = ceiling(excess / 2)
 
     upstreamContextRange = upstreamContextRange - amount_to_remove
     downstreamContextRange = downstreamContextRange - amount_to_remove
-    notes = paste0('Shortened context by ', amount_to_remove, ' bp on each side to account for input maximum construct size')
+    notes = c(notes, paste0('Shortened context by ', amount_to_remove, ' bp on each side to account for input maximum construct size'))
   }
 
   #### Start generating the constructs depending on SNP type
@@ -941,6 +976,8 @@ processSnp = function(snp,
 #'   a vector containing custom barcodes. See below for details.
 #' @param ensure_all_4_nuc logical -- if true, barcodes are filtered to only
 #'   those containaing all four nucleotides.
+#' @param flip_RV logical - if true, take the reverse complement of any alleles
+#'   with "RV" in the INFO field. This is to account for \href{https://www.ncbi.nlm.nih.gov/variation/docs/oldglossary_dbSNP1_vcf/}{SNPs that are encoded in terms of the reverse strand alleles in dbSNP}.
 #' @details The \code{"filterPatterns"} argument is used to remove barcodes
 #'   containing patterns that may perform badly in a MPRA setting. For example,
 #'   the default, 'AATAAA', corresponds to a sequence required for cleavage and
@@ -1020,6 +1057,7 @@ processVCF = function(vcf,
                       max_construct_size = NULL,
                       barcode_set = 'twelvemers',
                       ensure_all_4_nuc = TRUE,
+                      flip_RV = TRUE,
                       outPath = NULL){
 
   # kpn = 'GGTACC' #KpnI
@@ -1140,7 +1178,8 @@ processVCF = function(vcf,
                          enzyme3,
                          alter_aberrant = alter_aberrant,
                          extra_elements = extra_elements,
-                         max_construct_size = max_construct_size)) %>%
+                         max_construct_size = max_construct_size,
+                         flip_RV = flip_RV)) %>%
     mutate(dataNames = names(seqs) %>% list,
            failed = any(grepl('result', dataNames)))
 

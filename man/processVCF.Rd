@@ -9,7 +9,7 @@ processVCF(vcf, nper, upstreamContextRange, downstreamContextRange,
   enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA",
   alter_aberrant = FALSE, extra_elements = FALSE,
   max_construct_size = NULL, barcode_set = "twelvemers",
-  ensure_all_4_nuc = TRUE, outPath = NULL)
+  ensure_all_4_nuc = TRUE, flip_RV = TRUE, outPath = NULL)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}
@@ -51,11 +51,14 @@ construct size to generate. If provided, constructs that end up longer than
 this have sequence context evenly removed from both sides until
 sufficiently short.}
 
-\item{barcode_set}{string indicating the barcode set to use. See below for
-details.}
+\item{barcode_set}{string - indicating the barcode set to use. Alternatively
+a vector containing custom barcodes. See below for details.}
 
 \item{ensure_all_4_nuc}{logical -- if true, barcodes are filtered to only
 those containaing all four nucleotides.}
+
+\item{flip_RV}{logical - if true, take the reverse complement of any alleles
+with "RV" in the INFO field. This is to account for \href{https://www.ncbi.nlm.nih.gov/variation/docs/oldglossary_dbSNP1_vcf/}{SNPs that are encoded in terms of the reverse strand alleles in dbSNP}.}
 
 \item{outPath}{an optional path stating where to write a .tsv of the results}
 }
@@ -100,9 +103,8 @@ The \code{"filterPatterns"} argument is used to remove barcodes
   available as the \code{twelvemers} barcode set. See the README on github
   for a listing of the number of barcodes available per set. The freebarcodes
   sets only meet the traditional MPRA barcode requirements to varying degree.
-  \itemize{
-  \item contains all four nucleotides
-  \item doesn't contain runs of 4 or more of the same nucleotide
-  \item doesn't contain miR seed sequences
-  }
+  \itemize{ \item contains all four nucleotides \item doesn't contain runs of
+  4 or more of the same nucleotide \item doesn't contain miR seed sequences }
+  Alternatively, \code{barcode_set} can be a character vector containing a
+  custom set of all barcodes you'd like to use.
 }
