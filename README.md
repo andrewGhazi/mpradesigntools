@@ -129,7 +129,7 @@ Once you've performed your MPRA and have your sequencing results, check out [mal
 *    parallelization  
 *    ~~randomized alterations to aberrant digestion sites~~ ✔
 *    bed file to Sharpr-MPRA library oligo design  
-*    automated handling of RV SNPs
+*    ~~automated handling of RV SNPs~~ ✔
 *    ~~Optimized barcode pools~~ ✔
 
 If you are interested in a subset of these features or have other feature requests, please let us know to inform our implementation prioritization. You can do so by opening an issue on this repository or contacting the first and corresponding authors of the publication, listed above.
