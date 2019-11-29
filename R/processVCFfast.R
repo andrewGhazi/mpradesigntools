@@ -139,7 +139,7 @@ randomly_fix = function(snp,
                                   possible_alleles = map(pos_to_change, ~dplyr::setdiff(c('A', 'C', 'G', 'T'),
                                                                                         substr(aberrant_pattern,
                                                                                                .x, .x)))) %>%
-      tidyr::unnest() %>%
+      tidyr::unnest_legacy() %>%
       {dplyr::sample_n(.,
                        nrow(res_df) / 2,
                        replace = (nrow(res_df) / 2 > nrow(.)))} %>%
@@ -426,7 +426,7 @@ processSnp = function(snp,
                                      'GGC',
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         } else {
           res = randomly_fix(snp,
@@ -440,7 +440,7 @@ processSnp = function(snp,
                                      barcodes,
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         }
       } else {
@@ -632,7 +632,7 @@ processSnp = function(snp,
                                      'GGC',
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         } else {
           res = randomly_fix(snp,
@@ -646,7 +646,7 @@ processSnp = function(snp,
                                      barcodes,
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         }
       } else {
@@ -834,7 +834,7 @@ processSnp = function(snp,
                                      'GGC',
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         } else {
           res = randomly_fix(snp,
@@ -848,7 +848,7 @@ processSnp = function(snp,
                                      barcodes,
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
-            tidyr::nest(aberrant_pattern:constrseq_fixed,
+            tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
                         .key = 'site_fix_info')
         }
       } else {
@@ -1209,7 +1209,7 @@ processVCF = function(vcf,
       filter(failed) %>%
       select(seqs) %>%
       ungroup %>%
-      tidyr::unnest() %>%
+      tidyr::unnest_legacy() %>%
       dplyr::rename(reason = result)
 
     res = list(result = NA, failed = failures)
@@ -1220,7 +1220,7 @@ processVCF = function(vcf,
       filter(failed) %>%
       select(seqs) %>%
       ungroup %>%
-      tidyr::unnest() %>%
+      tidyr::unnest_legacy() %>%
       dplyr::rename(reason = result)
 
     successes = processed %>%
@@ -1262,7 +1262,7 @@ processVCF = function(vcf,
                                             empty = empty_fix)
 
           output %>%
-            tidyr::unnest() %>%
+            tidyr::unnest_legacy() %>%
             write_tsv(path = outPath)
         } else {
           res$result %>%
