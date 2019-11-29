@@ -1037,7 +1037,7 @@ processSnp = function(snp,
 #' @importFrom readr write_tsv
 #' @importFrom stringr str_split
 #' @importFrom stringr str_locate
-#' @importFrom tidyr unnest
+#' @importFrom tidyr unnest_legacy
 #' @importFrom tibble rownames_to_column
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom Biostrings reverseComplement
