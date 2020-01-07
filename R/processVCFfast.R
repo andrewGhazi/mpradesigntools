@@ -930,7 +930,7 @@ processSnp = function(snp,
     res$site_fix_info = NA
   }
 
-  if (exists('notes')) {
+  if (!is.null(notes)) {
     res$notes = notes
   } else {
     res$notes = NA
