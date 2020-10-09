@@ -1065,13 +1065,13 @@ processVCF = function(vcf,
   # sfi = 'GGCCNNNNNGGCC' #SfiI
 
   #skip metadata lines
-  skipNum = system(paste0('grep ^## ', vcf, ' | wc -l'), intern = TRUE) %>% as.numeric
+  vcf_lines = readLines(con = vcf)
+  skipNum = length(grep(x = vcf_lines, pattern = '^##'))
 
   # Check that the header doesn't have spaces in place of tabs. If it does (why
   # dbSNP, why?), replace the spaces with tabs and create a new col_names
   # variable
-  vcfColumns = system(paste0('head -', skipNum + 1, ' ', vcf, ' | tail -1'),
-                      intern = TRUE) %>%
+  vcfColumns = vcf_lines[skipNum + 1] %>%
     gsub('#', '', .) %>%
     gsub('[ ]+', '\t', .) %>% #replace spaces with tabs if applicable
     str_split('\t') %>%
@@ -1362,14 +1362,13 @@ fix_indels = function(REF, ALT){
 #' @importFrom magrittr %<>%
 spread_and_fix_indels = function(vcf_path){
 
-  skipNum = system(paste0('grep ^## ', vcf_path, ' | wc -l'), intern = TRUE) %>%
-    as.numeric
+  vcf_lines = readLines(con = vcf_path)
+  skipNum = length(grep(x = vcf_lines, pattern = '^##'))
 
   # Check that the header doesn't have spaces in place of tabs. If it does (why
   # dbSNP, why?), replace the spaces with tabs and create a new col_names
   # variable
-  vcfColumns = system(paste0('head -', skipNum + 1, ' ', vcf_path, ' | tail -1'),
-                      intern = TRUE) %>%
+  vcfColumns = vcf_lines[skipNum + 1] %>%
     gsub('#', '', .) %>%
     gsub('[ ]+', '\t', .) %>% #replace spaces with tabs if applicable
     stringr::str_split('\t') %>%
