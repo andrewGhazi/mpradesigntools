@@ -458,8 +458,8 @@ processSnp = function(snp,
 
     if (any(res$ndigSites > 3)) {
       #divide the results into broken and working sequences
-      working = res %>% filter(ndigSites <= 3)
-      broken = res %>% filter(ndigSites > 3)
+      working = res %>% filter(ndigSites < 3)
+      broken = res %>% filter(ndigSites >= 3)
 
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
@@ -665,8 +665,8 @@ processSnp = function(snp,
 
     if (any(res$ndigSites > 3)) {
       #divide the results into broken and working sequences
-      working = res %>% filter(ndigSites <= 3)
-      broken = res %>% filter(ndigSites > 3)
+      working = res %>% filter(ndigSites < 3)
+      broken = res %>% filter(ndigSites >= 3)
 
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
@@ -868,8 +868,8 @@ processSnp = function(snp,
 
     if (any(res$ndigSites > 3)) {
       #divide the results into broken and working sequences
-      working = res %>% filter(ndigSites <= 3)
-      broken = res %>% filter(ndigSites > 3)
+      working = res %>% filter(ndigSites < 3)
+      broken = res %>% filter(ndigSites >= 3)
 
       #remove the barcodes for the sequences that work
       brokenPool = unlist(snp$bcPools)[!(unlist(snp$bcPools) %in% working$barcodes)]
