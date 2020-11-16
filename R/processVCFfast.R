@@ -338,6 +338,7 @@ processSnp = function(snp,
 
         # the digestion sites get randomly fixed later, so this is all that's done here
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -347,6 +348,17 @@ processSnp = function(snp,
                                 result = 'Failed - Context contained a digestion site')
         return(failureRes)
       }
+
+      if (cross_center){
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - the variant is located within an aberrant digestion site')
+        return(failureRes)
+      }
+
 
     }
 
@@ -540,6 +552,7 @@ processSnp = function(snp,
                          enzyme3 %>% reverse)
 
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -547,6 +560,16 @@ processSnp = function(snp,
                                 REF = snp$REF,
                                 ALT = snp$ALT,
                                 result = 'Failed - Context contained a digestion site')
+        return(failureRes)
+      }
+
+      if (cross_center){
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - the variant is located within an aberrant digestion site')
         return(failureRes)
       }
     }
@@ -747,6 +770,7 @@ processSnp = function(snp,
                          enzyme3 %>% reverse)
 
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
+        cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -754,6 +778,15 @@ processSnp = function(snp,
                                 REF = snp$REF,
                                 ALT = snp$ALT,
                                 result = 'Failed - Context contained a digestion site')
+        return(failureRes)
+      }
+      if (cross_center){
+        failureRes = data_frame(ID = snp$ID,
+                                CHROM = snp$CHROM,
+                                POS = snp$POS,
+                                REF = snp$REF,
+                                ALT = snp$ALT,
+                                result = 'Failed - the variant is located within an aberrant digestion site')
         return(failureRes)
       }
     }
@@ -1122,7 +1155,7 @@ processVCF = function(vcf,
     print(paste0('Removed ', start_amount - end_amount, ' barcodes out of ', start_amount, ' (', round((start_amount - end_amount)/start_amount * 100, digits = 2), '%)'))
   }
 
-
+  filterPatterns = c(filterPatterns, enzyme1, enzyme2, enzyme3)
   filterRegex = paste(c(filterPatterns, # the patterns
                         filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
                       collapse = '|')
@@ -1388,3 +1421,12 @@ spread_and_fix_indels = function(vcf_path){
   vcf
 }
 
+check_cross_center = function(xsv, center_point){
+  # Takes an XStringView from matchPattern()
+  # center_point - the index of the central nucleotide
+  # Checks is the XSV crosses the center point
+
+  if(length(xsv) == 0) return(FALSE)
+
+  any(xsv@ranges@start < center_point & (xsv@ranges@start + xsv@ranges@width) > center_point)
+}
