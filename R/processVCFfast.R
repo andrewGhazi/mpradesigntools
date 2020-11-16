@@ -769,6 +769,7 @@ processSnp = function(snp,
                      constrseq = purrr::map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
 
     if (snp$reverseGene) {
+      snpseq = reverseComplement(snpseq)
       res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(reverseComplement(DNAString(.x)))))
     } else {
       res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(DNAString(.x))))
@@ -799,17 +800,7 @@ processSnp = function(snp,
     #This is too complicated to fix automatically, so just fail the SNP
     if (all(res$ndigSites >= 3)) {
       if (alter_aberrant & ndigsite_in_context > 0) {
-
-        if (!exists('dig_site_locations')) {
-
-          dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
-
-          # dig_site_locations = tidyr::crossing(dig_pattern = dig_patterns, constr_seq = res$constrseq) %>%
-          #   mutate(pattern_loc = purrr::map2(dig_pattern, constr_seq,
-          #                             ~Biostrings::matchPattern(.x, subject = DNAString(.y), fixed = FALSE))) %>%
-          #   pull(pattern_loc) %>%
-          #   unique
-        }
+        dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
 
         multiple_aberrant_dig_sites = sum(purrr::map_lgl(dig_site_locations,
                                                          ~length(BiocGenerics::width(.x)) != 0)) > 1
@@ -839,7 +830,7 @@ processSnp = function(snp,
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
             tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
-                        .key = 'site_fix_info')
+                               .key = 'site_fix_info')
         } else {
           res = randomly_fix(snp,
                              res,
@@ -853,7 +844,7 @@ processSnp = function(snp,
                                      revprimer),
                    ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3))) %>%
             tidyr::nest_legacy(aberrant_pattern:constrseq_fixed,
-                        .key = 'site_fix_info')
+                               .key = 'site_fix_info')
         }
       } else {
         failureRes = data_frame(ID = snp$ID,
