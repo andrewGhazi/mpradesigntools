@@ -1114,7 +1114,7 @@ processVCF = function(vcf,
   }
 
   if (ensure_all_4_nuc) {
-    print('Filtering barcode set to ensure that all barcodes contain all four barcodes...')
+    print('Filtering barcode set to ensure that all barcodes contain all four nucleotides...')
     start_amount = length(mers)
     mers = mers[purrr::map_lgl(mers, matches_all_nucleotides)]
     end_amount = length(mers)
