@@ -383,8 +383,10 @@ processSnp = function(snp,
                       ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
     }
 
-    #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
-    if (all(res$ndigSites > 3)) {
+    #If all of the sequences contained > 3 digestion sites, there's probably
+    #some location at the context/other parts boundary that generates a site.
+    #This is too complicated to fix automatically, so just fail the SNP
+    if (all(res$ndigSites >= 3)) {
 
       if (alter_aberrant & ndigsite_in_context > 0) {
 
@@ -589,9 +591,10 @@ processSnp = function(snp,
                        ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
     }
 
-    #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
-
-    if (all(res$ndigSites > 3)) {
+    #If all of the sequences contained > 3 digestion sites, there's probably
+    #some location at the context/other parts boundary that generates a site.
+    #This is too complicated to fix automatically, so just fail the SNP
+    if (all(res$ndigSites >= 3)) {
       if (alter_aberrant & ndigsite_in_context > 0) {
 
         if (!exists('dig_site_locations')) {
@@ -791,9 +794,10 @@ processSnp = function(snp,
                       ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
     }
 
-    #If all of the sequences contained > 3 digestion sites, there's probably some location at the context/other parts boundary that generates a site. This is too complicated to fix automatically, so just fail the SNP
-
-    if (all(res$ndigSites > 3)) {
+    #If all of the sequences contained > 3 digestion sites, there's probably
+    #some location at the context/other parts boundary that generates a site.
+    #This is too complicated to fix automatically, so just fail the SNP
+    if (all(res$ndigSites >= 3)) {
       if (alter_aberrant & ndigsite_in_context > 0) {
 
         if (!exists('dig_site_locations')) {
