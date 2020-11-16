@@ -48,15 +48,18 @@ generateInsConstruct = function(snpseq, mid, reverseGene, upstreamContextRange, 
   # If the insertion is for a gene that's transcribed from the reverse strand, it needs to be the COMPLEMENT of the allele to the LEFT of the position
   # Otherwise it's the mutant allele to the right of the position
 
-  if (reverseGene) {
-    toString(c(subseq(snpseq, 1, downstreamContextRange), #The insertion goes to the right of the position given
-               Biostrings::complement(mid),
-               subseq(snpseq, downstreamContextRange + 1, length(snpseq))))
-  } else {
-    toString(c(subseq(snpseq, 1, upstreamContextRange + 1), #The insertion goes to the right of the position given
-               mid,
-               subseq(snpseq, upstreamContextRange + 2, length(snpseq))))
-  }
+  # if (reverseGene) { # Deprecating this check because snpseq is pre-flipped now
+  #   toString(c(subseq(snpseq, 1, downstreamContextRange), #The insertion goes to the right of the position given
+  #              Biostrings::complement(mid),
+  #              subseq(snpseq, downstreamContextRange + 1, length(snpseq))))
+  # } else {
+  #   toString(c(subseq(snpseq, 1, upstreamContextRange + 1), #The insertion goes to the right of the position given
+  #              mid,
+  #              subseq(snpseq, upstreamContextRange + 2, length(snpseq))))
+  # }
+  toString(c(subseq(snpseq, 1, upstreamContextRange + 1), #The insertion goes to the right of the position given
+             mid,
+             subseq(snpseq, upstreamContextRange + 2, length(snpseq))))
 }
 
 #' @importFrom Biostrings subseq
@@ -323,6 +326,9 @@ processSnp = function(snp,
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
                     end = rangeend)
+    if (snp$reverseGene) {
+      snpseq %<>% reverseComplement()
+    }
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
     ndigsite_in_context = ndigsite
@@ -358,10 +364,6 @@ processSnp = function(snp,
                      constrseq = type %>% purrr::map_chr(~ifelse(.x == 'ref',
                                                           refseq,
                                                           altseq)))
-
-    if (snp$reverseGene) {
-      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(reverseComplement(DNAString(.x)))))
-    }
 
     if (extra_elements) {
       res %<>% mutate(sequence = paste0(fwprimer,
@@ -728,6 +730,9 @@ processSnp = function(snp,
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
                     end = rangeend)
+    if (snp$reverseGene) {
+      snpseq %<>% reverseComplement()
+    }
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
     ndigsite_in_context = ndigsite
@@ -768,12 +773,7 @@ processSnp = function(snp,
                                        2*nper),
                      constrseq = purrr::map(type, ~if (.x == 'ref') {snpseq} else {altseq}))
 
-    if (snp$reverseGene) {
-      snpseq = reverseComplement(snpseq)
-      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(reverseComplement(DNAString(.x)))))
-    } else {
-      res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(DNAString(.x))))
-    }
+    res %<>% mutate(constrseq = constrseq %>% purrr::map_chr(~toString(DNAString(.x))))
 
     if (extra_elements) {
       res %<>% mutate(sequence = paste0(fwprimer,
