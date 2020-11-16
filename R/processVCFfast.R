@@ -1157,7 +1157,8 @@ processVCF = function(vcf,
 
   filterPatterns = c(filterPatterns, enzyme1, enzyme2, enzyme3)
   filterRegex = paste(c(filterPatterns, # the patterns
-                        filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
+                        filterPatterns %>% DNAStringSet %>% reverseComplement() %>% toString %>% str_split(', ') %>% unlist,
+                        filterPatterns %>% DNAStringSet %>% reverse() %>% toString %>% str_split(', ') %>% unlist), # and their reverse complements
                       collapse = '|')
 
   print('Filtering undesired barcode patterns...')
