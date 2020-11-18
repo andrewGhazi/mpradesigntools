@@ -363,7 +363,15 @@ processSnp = function(snp,
     }
 
     refseq = toString(snpseq)
-    altseq = toString(replaceLetterAt(snpseq, upstreamContextRange + 1, snp$ALT))
+    if (!snp$reverseGene){
+      altseq = toString(replaceLetterAt(snpseq,
+                                        upstreamContextRange + 1,
+                                        snp$ALT))
+    } else {
+      altseq = toString(replaceLetterAt(snpseq,
+                                        upstreamContextRange + 1,
+                                        toString(complement(DNAStringsnp$ALT))))
+    }
 
     res = data_frame(ID = snp$ID,
                      CHROM = snp$CHROM,
@@ -574,7 +582,13 @@ processSnp = function(snp,
       }
     }
 
-    altseq = generateInsConstruct(snpseq, DNAString(snp$ALT), snp$reverseGene, upstreamContextRange, downstreamContextRange)
+    if (snp$reverseGene){
+      altseq = generateInsConstruct(snpseq,
+                                    reverseComplement(DNAString(snp$ALT)),
+                                    snp$reverseGene, upstreamContextRange, downstreamContextRange)
+    } else {
+      altseq = generateInsConstruct(snpseq, DNAString(snp$ALT), snp$reverseGene, upstreamContextRange, downstreamContextRange)
+    }
 
     if (extra_elements) {
       res = data_frame(ID = snp$ID,
