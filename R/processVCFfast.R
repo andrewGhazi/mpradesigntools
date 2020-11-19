@@ -370,7 +370,7 @@ processSnp = function(snp,
     } else {
       altseq = toString(replaceLetterAt(snpseq,
                                         upstreamContextRange + 1,
-                                        toString(complement(DNAStringsnp$ALT))))
+                                        toString(complement(DNAString(snp$ALT)))))
     }
 
     res = data_frame(ID = snp$ID,
