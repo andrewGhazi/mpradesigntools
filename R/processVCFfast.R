@@ -1066,7 +1066,7 @@ processSnp = function(snp,
 #' @importFrom dplyr mutate
 #' @importFrom dplyr rowwise
 #' @importFrom dplyr do
-#' @importFrom dplyr as.tbl
+#' @importFrom tibble as_tibble
 #' @importFrom dplyr ungroup
 #' @importFrom magrittr %<>%
 #' @importFrom purrr map
@@ -1081,6 +1081,7 @@ processSnp = function(snp,
 #' @importFrom stringr str_locate
 #' @importFrom tidyr unnest_legacy
 #' @importFrom tibble rownames_to_column
+#' @importFrom tibble as_tibble
 #' @importFrom Biostrings DNAStringSet
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings toString
@@ -1180,7 +1181,7 @@ processVCF = function(vcf,
   barcodeFilter = mers %>%
     str_locate(filterRegex) %>%
     as.data.frame() %>%
-    as.tbl() %>%
+    as_tibble() %>%
     tibble::rownames_to_column('removeIndex') %>%
     mutate(removeIndex = as.integer(removeIndex)) %>%
     na.omit
