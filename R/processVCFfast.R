@@ -28,10 +28,7 @@ countDigSites = function(biostring, enzyme1, enzyme2, enzyme3) {
 
   sum(countPattern(enzyme1, biostring, fixed = FALSE),
       countPattern(enzyme2, biostring, fixed = FALSE),
-      countPattern(enzyme3, biostring, fixed = FALSE),
-      countPattern(enzyme1 %>% reverse, biostring, fixed = FALSE),
-      countPattern(enzyme2 %>% reverse, biostring, fixed = FALSE),
-      countPattern(enzyme3 %>% reverse, biostring, fixed = FALSE))
+      countPattern(enzyme3, biostring, fixed = FALSE))
 }
 
 #' @importFrom Biostrings subseq
@@ -191,6 +188,7 @@ randomly_fix = function(snp,
 #' @return a data_frame of labeled sequences with appropriate information on the changes made
 #' @import BSgenome.Hsapiens.UCSC.hg38
 #' @importFrom Biostrings reverseComplement
+#' @importFrom Biostrings complement
 #' @importFrom Biostrings replaceLetterAt
 #' @importFrom tibble data_frame
 processSnp = function(snp,
@@ -230,10 +228,7 @@ processSnp = function(snp,
   # these get passed later to randomly_fix
   dig_patterns = c(enzyme1 = enzyme1,
                    enzyme2 = enzyme2,
-                   enzyme3 = enzyme3,
-                   enzyme1_rev = enzyme1 %>% reverse,
-                   enzyme2_rev = enzyme2 %>% reverse,
-                   enzyme3_rev = enzyme3 %>% reverse)
+                   enzyme3 = enzyme3)
 
   bc_length = nchar(snp$bcPools[[1]][1])
   #### check the construct size, shorten if applicable ----
@@ -554,10 +549,7 @@ processSnp = function(snp,
       if (alter_aberrant) {
         dig_patterns = c(enzyme1,
                          enzyme2,
-                         enzyme3,
-                         enzyme1 %>% reverse,
-                         enzyme2 %>% reverse,
-                         enzyme3 %>% reverse)
+                         enzyme3)
 
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
@@ -778,10 +770,7 @@ processSnp = function(snp,
       if (alter_aberrant) {
         dig_patterns = c(enzyme1,
                          enzyme2,
-                         enzyme3,
-                         enzyme1 %>% reverse,
-                         enzyme2 %>% reverse,
-                         enzyme3 %>% reverse)
+                         enzyme3)
 
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
