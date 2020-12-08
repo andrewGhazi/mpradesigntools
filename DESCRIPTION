@@ -20,4 +20,4 @@ Imports:
   magrittr,
   Biostrings,
   BSgenome.Hsapiens.UCSC.hg38
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.1

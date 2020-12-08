@@ -4,7 +4,9 @@
 \name{barcodes13-1}
 \alias{barcodes13-1}
 \title{barcodes13-1}
-\format{An object of class \code{character} of length 56736.}
+\format{
+An object of class \code{character} of length 56736.
+}
 \usage{
 barcodes13-1
 }

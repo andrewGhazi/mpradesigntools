@@ -4,12 +4,25 @@
 \alias{processVCF}
 \title{Process VCF into MPRA sequences}
 \usage{
-processVCF(vcf, nper, upstreamContextRange, downstreamContextRange,
-  fwprimer, revprimer, enzyme1 = "GGTACC", enzyme2 = "TCTAGA",
-  enzyme3 = "GGCCNNNNNGGCC", filterPatterns = "AATAAA",
-  alter_aberrant = FALSE, extra_elements = FALSE,
-  max_construct_size = NULL, barcode_set = "twelvemers",
-  ensure_all_4_nuc = TRUE, flip_RV = TRUE, outPath = NULL)
+processVCF(
+  vcf,
+  nper,
+  upstreamContextRange,
+  downstreamContextRange,
+  fwprimer,
+  revprimer,
+  enzyme1 = "GGTACC",
+  enzyme2 = "TCTAGA",
+  enzyme3 = "GGCCNNNNNGGCC",
+  filterPatterns = "AATAAA",
+  alter_aberrant = FALSE,
+  extra_elements = FALSE,
+  max_construct_size = NULL,
+  barcode_set = "twelvemers",
+  ensure_all_4_nuc = TRUE,
+  flip_RV = TRUE,
+  outPath = NULL
+)
 }
 \arguments{
 \item{vcf}{the path to the input VCF}

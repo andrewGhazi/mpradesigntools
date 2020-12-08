@@ -4,7 +4,9 @@
 \name{twelvemers}
 \alias{twelvemers}
 \title{1140292 inert twelvemers}
-\format{An object of class \code{character} of length 1140292.}
+\format{
+An object of class \code{character} of length 1140292.
+}
 \usage{
 twelvemers
 }
