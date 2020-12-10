@@ -146,7 +146,7 @@ randomly_fix = function(snp,
     aberrant_pattern = dig_patterns[which(dig_sites_present)]
 
     # This assures that the changes are unique, if possible
-    altered_patterns = data_frame(pos_to_change = 1:nchar(aberrant_pattern),
+    altered_patterns = data_frame(pos_to_change = str_locate_all(aberrant_pattern, '[^N]')[[1]][,1],
                                   possible_alleles = map(pos_to_change, ~dplyr::setdiff(c('A', 'C', 'G', 'T'),
                                                                                         substr(aberrant_pattern,
                                                                                                .x, .x)))) %>%
