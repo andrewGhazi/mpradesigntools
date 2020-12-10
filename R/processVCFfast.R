@@ -97,6 +97,17 @@ change_pattern = function(ab_pattern,
   return(ab_pattern)
 }
 
+randomly_replace_N = function(pattern_string){
+  bases_to_replace = str_locate_all(pattern_string, 'N')[[1]][,1]
+  replacements = sample(c('A', 'C', 'G', 'T'),
+                        size = length(bases_to_replace),
+                        replace = TRUE)
+  for (i in seq_along(bases_to_replace)){
+    substr(pattern_string, bases_to_replace[i], bases_to_replace[i]) = replacements[i]
+  }
+  return(pattern_string)
+}
+
 #' Randomly correct aberrant digestion sites
 #'
 #' For a SNP with aberrant digestion sites in the context, randomly change bases
@@ -142,10 +153,12 @@ randomly_fix = function(snp,
       tidyr::unnest_legacy() %>%
       {dplyr::sample_n(.,
                        nrow(res_df) / 2,
-                       replace = (nrow(res_df) / 2 > nrow(.)))} %>%
+                       replace = ((nrow(res_df) / 2) > nrow(.)))} %>%
       mutate(altered_pattern = map2_chr(pos_to_change, possible_alleles,
                                         change_pattern,
-                                        ab_pattern = aberrant_pattern))
+                                        ab_pattern = aberrant_pattern)) %>%
+      mutate(altered_pattern = map_chr(altered_pattern,
+                                       randomly_replace_N))
 
     res_df %<>%
       mutate(aberrant_pattern = aberrant_pattern,
@@ -330,7 +343,9 @@ processSnp = function(snp,
 
     if (ndigsite > 0) {
       if (alter_aberrant) {
-
+        dig_patterns = c(enzyme1,
+                         enzyme2,
+                         enzyme3)
         # the digestion sites get randomly fixed later, so this is all that's done here
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
