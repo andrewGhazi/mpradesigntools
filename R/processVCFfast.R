@@ -97,11 +97,12 @@ change_pattern = function(ab_pattern,
   return(ab_pattern)
 }
 
-randomly_replace_N = function(pattern_string){
+nonrandomly_replace_N = function(pattern_string, original_pattern){
   bases_to_replace = str_locate_all(pattern_string, 'N')[[1]][,1]
-  replacements = sample(c('A', 'C', 'G', 'T'),
-                        size = length(bases_to_replace),
-                        replace = TRUE)
+  replacements = map_chr(bases_to_replace,
+                         ~toString(subseq(original_pattern[[1]],
+                                 start = .x, width = 1)))
+
   for (i in seq_along(bases_to_replace)){
     substr(pattern_string, bases_to_replace[i], bases_to_replace[i]) = replacements[i]
   }
@@ -140,6 +141,7 @@ randomly_fix = function(snp,
   aberrant_in_context = any(dig_sites_present)
 
   aberrant_site = dig_site_locations[which(dig_sites_present)]  %>% .[[1]]
+  # ^ Fortunately dig_site_locations passes along the original bases
 
   if (aberrant_in_context) {
 
@@ -158,7 +160,8 @@ randomly_fix = function(snp,
                                         change_pattern,
                                         ab_pattern = aberrant_pattern)) %>%
       mutate(altered_pattern = map_chr(altered_pattern,
-                                       randomly_replace_N))
+                                       nonrandomly_replace_N,
+                                       original_pattern = aberrant_site))
 
     res_df %<>%
       mutate(aberrant_pattern = aberrant_pattern,
