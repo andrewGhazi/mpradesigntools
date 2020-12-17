@@ -774,9 +774,6 @@ processSnp = function(snp,
     snpseq = subseq(genome[[paste0('chr', as.character(snp$CHROM))]], # the chrom field needs to be only digits
                     start = rangestart,
                     end = rangeend)
-    if (snp$reverseGene) {
-      snpseq %<>% reverseComplement()
-    }
 
     ndigsite = countDigSites(snpseq, enzyme1, enzyme2, enzyme3)
     ndigsite_in_context = ndigsite
@@ -788,7 +785,10 @@ processSnp = function(snp,
                          enzyme3)
 
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
-        cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
+        delUpstreamRange = ifelse(snp$reverseGene,
+                                  downstreamContextRange,
+                                  upstreamContextRange)
+        cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = delUpstreamRange+1))
       } else {
         failureRes = data_frame(ID = snp$ID,
                                 CHROM = snp$CHROM,
@@ -812,8 +812,12 @@ processSnp = function(snp,
     delUpstreamRange = ifelse(snp$reverseGene,
                               downstreamContextRange,
                               upstreamContextRange)
-
     altseq = generateDelConstruct(snpseq, refwidth, delUpstreamRange)
+
+    if (snp$reverseGene) {
+      snpseq %<>% reverseComplement()
+      altseq %<>% reverseComplement()
+    }
 
     res = data_frame(ID = snp$ID,
                      CHROM = snp$CHROM,
