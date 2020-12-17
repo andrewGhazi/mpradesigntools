@@ -3,7 +3,7 @@
 
 #' @importFrom stringr str_split
 spreadAllelesAcrossRows = function(snp){
-  #snp is a row from a vcf data_frame
+  #snp is a row from a vcf tibble
   # if the 'ALT' column has commas in it, spread those out across otherwise identical rows
 
   if (!grepl(',', snp$ALT)) {
@@ -114,7 +114,7 @@ nonrandomly_replace_N = function(pattern_string, original_pattern){
 #' For a SNP with aberrant digestion sites in the context, randomly change bases
 #' in the site across barcodes
 #'
-#' @param snp a data_frame of one SNP
+#' @param snp a tibble of one SNP
 #' #' @param nper The number of barcoded sequences to be generated per allele per
 #'   SNP
 #' @param upstreamContextRange the amount of sequence context to acquire upstream of the SNP
@@ -129,7 +129,7 @@ randomly_fix = function(snp,
   dig_sites_present = purrr::map_lgl(dig_site_locations, ~length(BiocGenerics::width(.x)) != 0)
 
   if (sum(dig_sites_present) > 1) {
-    res_df = data_frame(ID = snp$ID,
+    res_df = tibble(ID = snp$ID,
                             CHROM = snp$CHROM,
                             POS = snp$POS,
                             REF = snp$REF,
@@ -148,7 +148,7 @@ randomly_fix = function(snp,
     aberrant_pattern = dig_patterns[which(dig_sites_present)]
 
     # This assures that the changes are unique, if possible
-    altered_patterns = data_frame(pos_to_change = str_locate_all(aberrant_pattern, '[^N]')[[1]][,1],
+    altered_patterns = tibble(pos_to_change = str_locate_all(aberrant_pattern, '[^N]')[[1]][,1],
                                   possible_alleles = map(pos_to_change, ~dplyr::setdiff(c('A', 'C', 'G', 'T'),
                                                                                         substr(aberrant_pattern,
                                                                                                .x, .x)))) %>%
@@ -171,7 +171,7 @@ randomly_fix = function(snp,
                                         reassign_pattern,
                                         aberrant_site_loc = aberrant_site))
   } else {
-    res_df = data_frame(ID = snp$ID,
+    res_df = tibble(ID = snp$ID,
                             CHROM = snp$CHROM,
                             POS = snp$POS,
                             REF = snp$REF,
@@ -190,7 +190,7 @@ randomly_fix = function(snp,
 #' doesn't contain aberrant digestion sites. If it does, resample the barcodes
 #' and try a few more times. If it still does, return a failure stating why.
 #'
-#' @param snp a data_frame containing the VCF information for one SNP as well as
+#' @param snp a tibble containing the VCF information for one SNP as well as
 #'   a barcode pool to sample from.
 #' @param nper The number of barcoded sequences to be generated per allele per
 #'   SNP
@@ -201,12 +201,12 @@ randomly_fix = function(snp,
 #' @param enzyme1 the first restriction enzyme's recognition pattern
 #' @param enzyme2 the first restriction enzyme's recognition pattern
 #' @param enzyme3 the first restriction enzyme's recognition pattern
-#' @return a data_frame of labeled sequences with appropriate information on the changes made
+#' @return a tibble of labeled sequences with appropriate information on the changes made
 #' @import BSgenome.Hsapiens.UCSC.hg38
 #' @importFrom Biostrings reverseComplement
 #' @importFrom Biostrings complement
 #' @importFrom Biostrings replaceLetterAt
-#' @importFrom tibble data_frame
+#' @importFrom tibble tibble
 processSnp = function(snp,
                       nper,
                       upstreamContextRange,
@@ -353,7 +353,7 @@ processSnp = function(snp,
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -363,7 +363,7 @@ processSnp = function(snp,
       }
 
       if (cross_center){
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -386,7 +386,7 @@ processSnp = function(snp,
                                         toString(complement(DNAString(snp$ALT)))))
     }
 
-    res = data_frame(ID = snp$ID,
+    res = tibble(ID = snp$ID,
                      CHROM = snp$CHROM,
                      snpIndex = 1:(nper*2),
                      type = rep(c('ref', 'alt'), each = nper),
@@ -440,7 +440,7 @@ processSnp = function(snp,
                                                   ~length(BiocGenerics::width(.x)))) > 1
 
         if (multiple_aberrant_dig_sites) {
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -481,7 +481,7 @@ processSnp = function(snp,
                         .key = 'site_fix_info')
         }
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -505,7 +505,7 @@ processSnp = function(snp,
 
         if (resample_attempts > 40) {
 
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -572,7 +572,7 @@ processSnp = function(snp,
         dig_site_locations = purrr::map(dig_patterns, Biostrings::matchPattern, subject = snpseq, fixed = FALSE)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = upstreamContextRange+1))
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -582,7 +582,7 @@ processSnp = function(snp,
       }
 
       if (cross_center){
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -601,7 +601,7 @@ processSnp = function(snp,
     }
 
     if (extra_elements) {
-      res = data_frame(ID = snp$ID,
+      res = tibble(ID = snp$ID,
                        CHROM = snp$CHROM,
                        snpIndex = 1:(nper*2),
                        type = rep(c('ref', 'alt'), each = nper),
@@ -621,7 +621,7 @@ processSnp = function(snp,
                                          revprimer),
                        ndigSites = sequence %>% purrr::map_int(~countDigSites(DNAString(.x), enzyme1, enzyme2, enzyme3)))
     } else {
-      res = data_frame(ID = snp$ID,
+      res = tibble(ID = snp$ID,
                        CHROM = snp$CHROM,
                        snpIndex = 1:(nper*2),
                        type = rep(c('ref', 'alt'), each = nper),
@@ -661,7 +661,7 @@ processSnp = function(snp,
                                                   ~length(BiocGenerics::width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -702,7 +702,7 @@ processSnp = function(snp,
                         .key = 'site_fix_info')
         }
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -725,7 +725,7 @@ processSnp = function(snp,
         resample_attempts = resample_attempts + 1
 
         if (resample_attempts > 40) {
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -793,7 +793,7 @@ processSnp = function(snp,
                                   upstreamContextRange)
         cross_center = any(purrr::map_lgl(dig_site_locations, check_cross_center, center_point = delUpstreamRange+1))
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -802,7 +802,7 @@ processSnp = function(snp,
         return(failureRes)
       }
       if (cross_center){
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -822,7 +822,7 @@ processSnp = function(snp,
       altseq %<>% reverseComplement()
     }
 
-    res = data_frame(ID = snp$ID,
+    res = tibble(ID = snp$ID,
                      CHROM = snp$CHROM,
                      snpIndex = 1:(nper*2),
                      type = rep(c('ref', 'alt'), each = nper),
@@ -864,7 +864,7 @@ processSnp = function(snp,
                                                          ~length(BiocGenerics::width(.x)) != 0)) > 1
 
         if (multiple_aberrant_dig_sites) {
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -905,7 +905,7 @@ processSnp = function(snp,
                                .key = 'site_fix_info')
         }
       } else {
-        failureRes = data_frame(ID = snp$ID,
+        failureRes = tibble(ID = snp$ID,
                                 CHROM = snp$CHROM,
                                 POS = snp$POS,
                                 REF = snp$REF,
@@ -928,7 +928,7 @@ processSnp = function(snp,
         resample_attempts = resample_attempts + 1
 
         if(resample_attempts > 40) {
-          failureRes = data_frame(ID = snp$ID,
+          failureRes = tibble(ID = snp$ID,
                                   CHROM = snp$CHROM,
                                   POS = snp$POS,
                                   REF = snp$REF,
@@ -965,7 +965,7 @@ processSnp = function(snp,
     }
 
   } else {
-    failureRes = data_frame(ID = snp$ID,
+    failureRes = tibble(ID = snp$ID,
                             CHROM = snp$CHROM,
                             POS = snp$POS,
                             REF = snp$REF,
@@ -1065,9 +1065,9 @@ processSnp = function(snp,
 #'   4 or more of the same nucleotide \item doesn't contain miR seed sequences }
 #'   Alternatively, \code{barcode_set} can be a character vector containing a
 #'   custom set of all barcodes you'd like to use.
-#' @return A list of two data_frames. The first, named 'result', is a data_frame
+#' @return A list of two tibbles. The first, named 'result', is a tibble
 #'   containing the labeled MPRA sequences. The second, named 'failed', is a
-#'   data_frame listing the SNPs that are not able to have MPRA sequences
+#'   tibble listing the SNPs that are not able to have MPRA sequences
 #'   generated and the reason why.
 #' @export
 #' @importFrom dplyr select
@@ -1405,7 +1405,7 @@ fix_indels = function(REF, ALT){
 #'   The output is written to the same directory as the input named
 #'   "*_fixed.vcf". This is ready to be fed into processVCF()
 #' @param vcf_path path to a vcf to be fixed
-#' @return a data_frame of the fixed VCF
+#' @return a tibble of the fixed VCF
 #' @export
 #' @importFrom stringr str_split
 #' @importFrom readr read_tsv
